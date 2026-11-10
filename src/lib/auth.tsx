@@ -1,3 +1,4 @@
+import type React from 'react';
 import { createContext, useContext, useEffect, useSyncExternalStore, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
@@ -63,7 +64,10 @@ async function refreshSession() {
   return hydrate(data.session);
 }
 type Auth = State & { isAuthenticated: boolean; isAdmin: boolean; isCustomer: boolean; isRider: boolean; login: typeof login; register: typeof register; logout: () => Promise<void>; refreshSession: typeof refreshSession; refreshProfile: typeof refreshProfile };
-const AuthContext = createContext<Auth | null>(null);
+// Keep one context object across hot reloads; a re-created context would orphan
+// components from the provider that is already mounted ("provider missing").
+const g = globalThis as typeof globalThis & { __mwAuthContext?: React.Context<Auth | null> };
+const AuthContext = (g.__mwAuthContext ??= createContext<Auth | null>(null));
 export function AuthProvider({ children }: { children: ReactNode }) {
   const snapshot = useSyncExternalStore((fn) => { listeners.add(fn); return () => listeners.delete(fn); }, () => state, () => initial);
   const queryClient = useQueryClient();
