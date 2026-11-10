@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,6 +13,11 @@ import { PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/orders";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin | Mwanainchi" }, { name: "robots", content: "noindex" }] }),
+  // UI gate only; the database policies are what actually block non-admins.
+  beforeLoad: async ({ context }) => {
+    const { data, error } = await supabase.rpc("has_role", { _user_id: context.user.id, _role: "admin" });
+    if (error || data !== true) throw redirect({ to: "/account" });
+  },
   component: Admin,
 });
 
