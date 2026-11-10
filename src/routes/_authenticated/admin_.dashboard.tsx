@@ -3,14 +3,13 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { formatKES, formatQty } from "@/lib/pricing";
 import { useAuth } from "@/lib/auth";
 import { assignDelivery, requireAdminAccess } from "@/lib/auth.functions";
 import { RiderReview } from "@/components/admin/RiderReview";
+import { InventoryAdmin, ProductsAdmin, ZonesAdmin } from "@/components/admin/CatalogAdmin";
 import { PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/orders";
 
 export const Route = createFileRoute("/_authenticated/admin_/dashboard")({
@@ -35,9 +34,11 @@ function Admin() {
       <h1 className="text-4xl font-bold sm:text-5xl">Business dashboard</h1>
       <Button variant="outline" className="mt-4 rounded-full" onClick={() => void logout()}>Sign out</Button>
       <Tabs defaultValue="orders" className="mt-8">
-        <TabsList><TabsTrigger value="orders">Orders</TabsTrigger><TabsTrigger value="products">Products</TabsTrigger><TabsTrigger value="riders">Riders</TabsTrigger></TabsList>
+        <TabsList className="h-auto w-full flex-wrap justify-start"><TabsTrigger value="orders">Orders</TabsTrigger><TabsTrigger value="products">Products</TabsTrigger><TabsTrigger value="inventory">Inventory</TabsTrigger><TabsTrigger value="zones">Delivery areas</TabsTrigger><TabsTrigger value="riders">Riders</TabsTrigger></TabsList>
         <TabsContent value="orders"><Orders /></TabsContent>
-        <TabsContent value="products"><Products /></TabsContent>
+        <TabsContent value="products"><ProductsAdmin /></TabsContent>
+        <TabsContent value="inventory"><InventoryAdmin /></TabsContent>
+        <TabsContent value="zones"><ZonesAdmin /></TabsContent>
         <TabsContent value="riders"><RiderReview /></TabsContent>
       </Tabs>
     </div>
@@ -101,31 +102,6 @@ function Orders() {
         );
       })}
     </div>
-  );
-}
-
-function Products() {
-  const qc = useQueryClient();
-  const { data = [] } = useQuery({ queryKey: ["admin-products"], queryFn: async () => (await supabase.from("products").select("*").order("sort")).data ?? [] });
-  const save = async (id: string, patch: { available?: boolean; price?: number; stock?: number; promo_price?: number | null }) => {
-    const { error } = await supabase.from("products").update(patch).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Saved");
-    qc.invalidateQueries({ queryKey: ["admin-products"] });
-    qc.invalidateQueries({ queryKey: ["catalog"] });
-  };
-  return (
-    <ul className="mt-6 divide-y rounded-2xl bg-card shadow-warm">
-      {data.map((p) => (
-        <li key={p.id} className="grid grid-cols-2 items-center gap-3 p-4 sm:grid-cols-[1fr_120px_120px_120px_auto]">
-          <div className="col-span-2 min-w-0 sm:col-span-1"><p className="truncate font-semibold">{p.name}</p><p className="text-xs text-muted-foreground">{p.category} · per {p.unit}</p></div>
-          <label className="text-xs">Price<Input type="number" defaultValue={Number(p.price)} onBlur={(e) => Number(e.target.value) !== Number(p.price) && save(p.id, { price: Number(e.target.value) })} /></label>
-          <label className="text-xs">Offer price<Input type="number" defaultValue={p.promo_price ?? ""} onBlur={(e) => { const v = e.target.value === "" ? null : Number(e.target.value); if (v !== (p.promo_price == null ? null : Number(p.promo_price))) save(p.id, { promo_price: v }); }} /></label>
-          <label className="text-xs">Stock ({p.unit})<Input type="number" step="0.25" defaultValue={Number(p.stock)} onBlur={(e) => Number(e.target.value) !== Number(p.stock) && save(p.id, { stock: Number(e.target.value) })} /></label>
-          <label className="flex items-center gap-2 text-xs"><Switch checked={p.available} onCheckedChange={(v) => save(p.id, { available: v })} /> Available</label>
-        </li>
-      ))}
-    </ul>
   );
 }
 
