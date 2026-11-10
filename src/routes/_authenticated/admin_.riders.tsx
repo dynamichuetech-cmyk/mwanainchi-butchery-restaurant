@@ -1,0 +1,4 @@
+import { createFileRoute,redirect } from '@tanstack/react-router';
+import { requireAdminAccess } from '@/lib/auth.functions';
+import { RiderReview } from '@/components/admin/RiderReview';
+export const Route=createFileRoute('/_authenticated/admin_/riders')({head:()=>({meta:[{title:'Rider review | Mwanainchi business'},{name:'description',content:'Restricted rider application review.'},{property:'og:title',content:'Rider review | Mwanainchi business'},{property:'og:description',content:'Restricted rider review.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'},{name:'robots',content:'noindex,nofollow'}]}),beforeLoad:async()=>{try{await requireAdminAccess();}catch{throw redirect({to:'/admin'});}},component:()=> <div className="mx-auto max-w-5xl px-4 py-12"><RiderReview/></div>});

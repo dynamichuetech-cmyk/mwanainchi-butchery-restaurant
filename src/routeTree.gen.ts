@@ -24,8 +24,10 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedRiderRouteImport } from './routes/_authenticated/rider'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin_.dashboard'
+import { Route as AuthenticatedAdminRidersRouteImport } from './routes/_authenticated/admin_.riders'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedRiderIndexRouteImport } from './routes/_authenticated/rider.index'
+import { Route as AuthenticatedRiderProfileRouteImport } from './routes/_authenticated/rider.profile'
 import { Route as AuthenticatedRiderStatusRouteImport } from './routes/_authenticated/rider.status'
 
 const IndexRoute = IndexRouteImport.update({
@@ -103,6 +105,12 @@ const AuthenticatedAdminDashboardRoute =
     path: '/admin/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminRidersRoute =
+  AuthenticatedAdminRidersRouteImport.update({
+    id: '/admin_/riders',
+    path: '/admin/riders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOrdersOrderIdRoute =
   AuthenticatedOrdersOrderIdRouteImport.update({
     id: '/orders/$orderId',
@@ -114,6 +122,12 @@ const AuthenticatedRiderIndexRoute = AuthenticatedRiderIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRiderRoute,
 } as any)
+const AuthenticatedRiderProfileRoute =
+  AuthenticatedRiderProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedRiderRoute,
+  } as any)
 const AuthenticatedRiderStatusRoute =
   AuthenticatedRiderStatusRouteImport.update({
     id: '/status',
@@ -136,7 +150,9 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/rider': typeof AuthenticatedRiderRouteWithChildren
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/riders': typeof AuthenticatedAdminRidersRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/rider/profile': typeof AuthenticatedRiderProfileRoute
   '/rider/status': typeof AuthenticatedRiderStatusRoute
   '/rider/': typeof AuthenticatedRiderIndexRoute
 }
@@ -154,7 +170,9 @@ export interface FileRoutesByTo {
   '/account': typeof AuthenticatedAccountRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/riders': typeof AuthenticatedAdminRidersRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/rider/profile': typeof AuthenticatedRiderProfileRoute
   '/rider/status': typeof AuthenticatedRiderStatusRoute
   '/rider': typeof AuthenticatedRiderIndexRoute
 }
@@ -175,7 +193,9 @@ export interface FileRoutesById {
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/rider': typeof AuthenticatedRiderRouteWithChildren
   '/_authenticated/admin_/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/_authenticated/admin_/riders': typeof AuthenticatedAdminRidersRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/_authenticated/rider/profile': typeof AuthenticatedRiderProfileRoute
   '/_authenticated/rider/status': typeof AuthenticatedRiderStatusRoute
   '/_authenticated/rider/': typeof AuthenticatedRiderIndexRoute
 }
@@ -196,7 +216,9 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/rider'
     | '/admin/dashboard'
+    | '/admin/riders'
     | '/orders/$orderId'
+    | '/rider/profile'
     | '/rider/status'
     | '/rider/'
   fileRoutesByTo: FileRoutesByTo
@@ -214,7 +236,9 @@ export interface FileRouteTypes {
     | '/account'
     | '/checkout'
     | '/admin/dashboard'
+    | '/admin/riders'
     | '/orders/$orderId'
+    | '/rider/profile'
     | '/rider/status'
     | '/rider'
   id:
@@ -234,7 +258,9 @@ export interface FileRouteTypes {
     | '/_authenticated/checkout'
     | '/_authenticated/rider'
     | '/_authenticated/admin_/dashboard'
+    | '/_authenticated/admin_/riders'
     | '/_authenticated/orders/$orderId'
+    | '/_authenticated/rider/profile'
     | '/_authenticated/rider/status'
     | '/_authenticated/rider/'
   fileRoutesById: FileRoutesById
@@ -360,6 +386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin_/riders': {
+      id: '/_authenticated/admin_/riders'
+      path: '/admin/riders'
+      fullPath: '/admin/riders'
+      preLoaderRoute: typeof AuthenticatedAdminRidersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders/$orderId': {
       id: '/_authenticated/orders/$orderId'
       path: '/orders/$orderId'
@@ -374,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRiderIndexRouteImport
       parentRoute: typeof AuthenticatedRiderRoute
     }
+    '/_authenticated/rider/profile': {
+      id: '/_authenticated/rider/profile'
+      path: '/profile'
+      fullPath: '/rider/profile'
+      preLoaderRoute: typeof AuthenticatedRiderProfileRouteImport
+      parentRoute: typeof AuthenticatedRiderRoute
+    }
     '/_authenticated/rider/status': {
       id: '/_authenticated/rider/status'
       path: '/status'
@@ -385,11 +425,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRiderRouteChildren {
+  AuthenticatedRiderProfileRoute: typeof AuthenticatedRiderProfileRoute
   AuthenticatedRiderStatusRoute: typeof AuthenticatedRiderStatusRoute
   AuthenticatedRiderIndexRoute: typeof AuthenticatedRiderIndexRoute
 }
 
 const AuthenticatedRiderRouteChildren: AuthenticatedRiderRouteChildren = {
+  AuthenticatedRiderProfileRoute: AuthenticatedRiderProfileRoute,
   AuthenticatedRiderStatusRoute: AuthenticatedRiderStatusRoute,
   AuthenticatedRiderIndexRoute: AuthenticatedRiderIndexRoute,
 }
@@ -402,6 +444,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedRiderRoute: typeof AuthenticatedRiderRouteWithChildren
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminRidersRoute: typeof AuthenticatedAdminRidersRoute
   AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRoute
 }
 
@@ -410,6 +453,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedRiderRoute: AuthenticatedRiderRouteWithChildren,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminRidersRoute: AuthenticatedAdminRidersRoute,
   AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRoute,
 }
 

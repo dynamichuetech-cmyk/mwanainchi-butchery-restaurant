@@ -6,6 +6,7 @@ import { z } from 'zod';
 export const getAuthIdentity = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { data: verified, error: verifyError } = await context.supabase.auth.getUser();
   if (verifyError || !verified.user || verified.user.id !== context.userId) throw new Error('Session expired');
+  if (!verified.user.email_confirmed_at) throw new Error('Email verification required');
   const { error: repairError } = await context.supabase.rpc('ensure_my_identity');
   if (repairError) throw new Error('Profile not found');
   const [profile, roles] = await Promise.all([

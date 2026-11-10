@@ -17,7 +17,7 @@ import { getAuthIdentity, submitOrder } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
   head: () => ({ meta: [{ title: "Checkout | Mwanainchi" }, { name: "description", content: "Complete your Mwanainchi food order securely." }, { property: "og:title", content: "Checkout | Mwanainchi" }, { property: "og:description", content: "Delivery and collection checkout." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
-  beforeLoad: async () => { const identity = await getAuthIdentity(); if (identity.role !== "customer") throw redirect({ to: "/account" }); },
+  beforeLoad: async () => { let identity; try {identity=await getAuthIdentity();} catch {throw redirect({to:'/auth',search:{kind:'customer',redirect:'/checkout'}});} if(identity.role==='rider') throw redirect({to:'/rider'}); if(identity.role!=="customer") throw redirect({to:'/auth'}); },
   pendingComponent: () => <p role="status" className="py-32 text-center">Checking your account…</p>,
   loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
   component: Checkout,

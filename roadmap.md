@@ -1,5 +1,6 @@
 # Mwanainchi 2.0 roadmap
-- [ ] Unified customer/rider auth, private admin entry, rider approvals and assignment access; acceptance tests and report
+- [x] Unified customer/rider auth, private admin entry, rider approvals and assignment access; partial acceptance tests and report
+- [ ] Verified admin/rider approval acceptance — blocked: owner and rider email confirmation; no approved rider session or live assignment yet
 - [x] Authentication repair: shared session, verified roles, safe redirects, checkout and logout; customer security tests and delivery report
 - [ ] Authentication acceptance: admin login/dashboard and email-link completion — blocked: administrator email confirmation and recipient mailbox action; rider tests wait on rider accounts/assignments
 - [x] Brand, homepage, butchery (weight-based), Our Kitchen (customisations), shop/search
