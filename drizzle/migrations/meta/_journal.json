@@ -29,6 +29,20 @@
       "when": 1794342840172,
       "tag": "0003_repair_auth_identity_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794343282173,
+      "tag": "0004_repair_checkout_collection_record_and_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794343403945,
+      "tag": "0005_scope_profile_fields_and_superadmin_access",
+      "breakpoints": true
     }
   ]
 }
