@@ -637,6 +637,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_my_location: {
+        Args: { _id: string; _latitude: number; _longitude: number }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:

@@ -73,5 +73,8 @@ export const assignDelivery = createServerFn({method:'POST'}).middleware([requir
 });
 export const deliveryDetails = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async ({context})=>{
  const {data,error}=await context.supabase.rpc('my_delivery_details');if(error)throw new Error('Unable to load delivery details');
- return z.array(z.object({id:z.string(),order_number:z.string(),status:z.string(),contact_name:z.string(),contact_phone:z.string(),address:z.string().nullable(),notes:z.string().nullable()})).parse(data);
+ return z.array(z.object({id:z.string(),order_number:z.string(),status:z.string(),contact_name:z.string(),contact_phone:z.string(),address:z.string().nullable(),notes:z.string().nullable(),zone:z.string().nullable(),total:z.coerce.number(),delivery_fee:z.coerce.number(),payment_method:z.string(),payment_status:z.string(),latitude:z.coerce.number().nullable(),longitude:z.coerce.number().nullable(),updated_at:z.string()})).parse(data);
+});
+export const updateMyLocation = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(z.object({id:z.string().uuid(),latitude:z.number().min(-90).max(90),longitude:z.number().min(-180).max(180)})).handler(async ({context,data})=>{
+ const {error}=await context.supabase.rpc('update_my_location',{_id:data.id,_latitude:data.latitude,_longitude:data.longitude});if(error)throw new Error('Location can only be shared during an active delivery');return true;
 });

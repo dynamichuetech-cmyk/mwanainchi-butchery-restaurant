@@ -64,6 +64,13 @@
       "when": 1794346624188,
       "tag": "0008_admin_manage_products_zones",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794346735691,
+      "tag": "0009_rider_dashboard_location_earnings",
+      "breakpoints": true
     }
   ]
 }
