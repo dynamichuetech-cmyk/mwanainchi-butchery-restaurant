@@ -1,0 +1,10 @@
+# Mwanainchi 2.0 roadmap
+- [x] Brand, homepage, butchery (weight-based), Our Kitchen (customisations), shop/search
+- [x] Mixed cart, discount codes, 5-step checkout with delivery zones, M-Pesa/card/cash selection
+- [x] Customer accounts: sign-up/in, Google, password reset, profile, addresses, orders, payments, reorder
+- [x] Live order status tracking
+- [ ] Live M-Pesa STK Push — blocked: needs Safaricom Daraja credentials
+- [ ] Live card payments — blocked: choose provider (e.g. Flutterwave/IntaSend) and credentials
+- [ ] Admin dashboard (products, orders, inventory, zones, hours, finance, staff)
+- [ ] Rider portal + live map tracking
+- [ ] Real contact details (phone, address, hours) from the business
