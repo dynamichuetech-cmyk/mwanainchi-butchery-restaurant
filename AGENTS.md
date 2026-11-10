@@ -33,7 +33,7 @@ use the editor.
 - Orders are created only through the `place_order` database function, which re-prices items, checks stock/zone/discount and deducts stock — never insert orders from the client. Why: prices and availability must be validated server-side.
 - Product images are referenced by `image_key` mapped in `src/lib/images.ts`. Why: bundled assets, no storage needed yet.
 - Public catalogue (products, zones, settings) loads via the `getCatalog` server function with the publishable key. Why: SSR-safe public reads.
-- Admin access comes only from the user_roles table (has_role); the owner email is auto-granted admin by a trigger once its email is confirmed. Why: no hardcoded credentials, no client-side role checks.
+- Admin access comes only from the user_roles table (has_role); the provisioned owner auth ID is auto-granted admin by a trigger once its email is confirmed. Why: no hardcoded credentials, no client-side role checks.
 - Shared authentication state is owned by AuthProvider with one nonblocking Auth subscription; protected route gates remain integration-managed and role checks use authenticated server functions. Why: avoid session races and competing listeners.
 - Retain the existing enum-backed user_roles model; resolve the highest assigned role on the server and repair only missing customer identities. Why: preserve existing RLS without introducing parallel permission tables.
 - Checkout submits through an authenticated TanStack server function to place_order, never a parallel Express service. Why: the existing server runtime and database function own verified identity and pricing.

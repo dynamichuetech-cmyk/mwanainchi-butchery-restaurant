@@ -67,3 +67,10 @@ export const riderAssignments = createServerFn({method:'POST'}).middleware([requ
 export const updateDelivery = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(z.object({id:z.string().uuid(),status:z.enum(['out_for_delivery','delivered']),latitude:z.number().min(-90).max(90).optional(),longitude:z.number().min(-180).max(180).optional()})).handler(async ({context,data}) => {
  const {error}=await context.supabase.rpc('update_my_delivery',{_id:data.id,_status:data.status,...(data.latitude===undefined?{}:{_latitude:data.latitude}),...(data.longitude===undefined?{}:{_longitude:data.longitude})});if(error) throw new Error('Unable to update this delivery');return true;
 });
+export const assignDelivery = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(z.object({order:z.string().uuid(),rider:z.string().uuid()})).handler(async ({context,data})=>{
+ const {error}=await context.supabase.rpc('assign_delivery',{_order:data.order,_rider:data.rider}); if(error) throw new Error('A ready delivery order and approved rider are required.'); return true;
+});
+export const deliveryDetails = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async ({context})=>{
+ const {data,error}=await context.supabase.rpc('my_delivery_details');if(error)throw new Error('Unable to load delivery details');
+ return z.array(z.object({id:z.string(),order_number:z.string(),status:z.string(),contact_name:z.string(),contact_phone:z.string(),address:z.string().nullable(),notes:z.string().nullable()})).parse(data);
+});

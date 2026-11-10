@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -147,6 +148,8 @@ function RootComponent() {
 
 function Shell({ children }: { children: ReactNode }) {
   const announcement = Route.useLoaderData();
+  const privatePortal = useRouterState({select: state => state.location.pathname.startsWith('/admin')});
+  if (privatePortal) return <main className="min-h-screen bg-background">{children}</main>;
   return (
     <div className="flex min-h-screen flex-col">
       <Header announcement={announcement || undefined} />

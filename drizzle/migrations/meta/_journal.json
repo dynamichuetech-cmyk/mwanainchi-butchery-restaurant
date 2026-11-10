@@ -50,6 +50,13 @@
       "when": 1794344033241,
       "tag": "0006_rider_applications_and_private_access",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794344730091,
+      "tag": "0007_trusted_owner_and_delivery_assignment",
+      "breakpoints": true
     }
   ]
 }

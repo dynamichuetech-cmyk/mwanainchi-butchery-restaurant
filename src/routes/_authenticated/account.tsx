@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,8 +13,10 @@ import { useCart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
 import { PAYMENT_LABEL, STATUS_LABEL } from "@/lib/orders";
 import { useAuth } from "@/lib/auth";
+import { getAuthIdentity } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/_authenticated/account")({
+  beforeLoad: async () => { const identity=await getAuthIdentity(); if(identity.role==='rider') throw redirect({to:'/rider'}); if(identity.role!=='customer') throw redirect({to:'/auth'}); },
   head: () => ({ meta: [{ title: "My Account | Mwanainchi" }, { name: "description", content: "Your Mwanainchi orders, addresses and profile." }, { property: "og:title", content: "My Account | Mwanainchi" }, { property: "og:description", content: "Manage your Mwanainchi account." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
   component: Account,

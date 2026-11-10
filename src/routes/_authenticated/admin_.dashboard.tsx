@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { formatKES, formatQty } from "@/lib/pricing";
 import { useAuth } from "@/lib/auth";
-import { requireAdminAccess } from "@/lib/auth.functions";
+import { assignDelivery, requireAdminAccess } from "@/lib/auth.functions";
 import { RiderReview } from "@/components/admin/RiderReview";
 import { PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/orders";
 
@@ -28,7 +28,7 @@ function Admin() {
   const { isAdmin, isLoading, logout } = useAuth();
   if (isLoading) return <p role="status" className="py-32 text-center text-muted-foreground">Checking access…</p>;
   if (!isAdmin)
-    return <div className="py-32 text-center"><h1 className="text-3xl font-bold">Admins only</h1><Link to="/account" className="text-primary">Back to my account</Link></div>;
+    return <div className="py-32 text-center"><h1 className="text-3xl font-bold">Access denied</h1></div>;
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-14">
       <p className="text-sm font-semibold uppercase tracking-widest text-leaf">Admin</p>
@@ -93,6 +93,7 @@ function Orders() {
             <p className="mt-2 text-sm">Payment: {o.payment_method.toUpperCase()} · {PAYMENT_LABEL[o.payment_status]}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {nextStatus && o.status !== "cancelled" && <Button size="sm" className="rounded-full" onClick={() => update(o.id, { status: nextStatus })}>Mark {STATUS_LABEL[nextStatus]}</Button>}
+              {o.fulfilment === "delivery" && o.status === "ready" && <AssignRider order={o.id} />}
               {o.payment_method === "cash" && o.payment_status === "pending" && <Button size="sm" variant="outline" className="rounded-full" onClick={() => update(o.id, { payment_status: "paid" })}>Cash received</Button>}
               {!["delivered", "collected", "cancelled"].includes(o.status) && <Button size="sm" variant="ghost" className="rounded-full text-destructive" onClick={() => update(o.id, { status: "cancelled" })}>Cancel</Button>}
             </div>
@@ -129,3 +130,9 @@ function Products() {
 }
 
 const Stat = ({ l, v }: { l: string; v: string }) => <div className="rounded-2xl bg-charcoal p-3 text-charcoal-foreground sm:p-5"><p className="text-[11px] opacity-70 sm:text-sm">{l}</p><p className="text-lg font-bold sm:text-2xl">{v}</p></div>;
+
+function AssignRider({ order }: { order: string }) {
+  const qc = useQueryClient();
+  const { data = [] } = useQuery({ queryKey: ["approved-riders"], queryFn: async () => (await supabase.from("rider_profiles").select("user_id, phone").eq("approval_status", "approved")).data ?? [] });
+  return <select aria-label="Assign approved rider" className="h-8 rounded-md border bg-background px-2 text-sm" defaultValue="" onChange={async (e) => { try { await assignDelivery({ data: { order, rider: e.target.value } }); toast.success("Rider assigned"); await qc.invalidateQueries({ queryKey: ["admin-orders"] }); } catch (error) { toast.error(error instanceof Error ? error.message : "Unable to assign rider"); } }}><option value="" disabled>Assign rider</option>{data.map((r) => <option key={r.user_id} value={r.user_id}>{r.phone || r.user_id.slice(0, 8)}</option>)}</select>;
+}

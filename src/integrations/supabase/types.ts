@@ -606,6 +606,10 @@ export type Database = {
     }
     Functions: {
       apply_as_rider: { Args: never; Returns: undefined }
+      assign_delivery: {
+        Args: { _order: string; _rider: string }
+        Returns: undefined
+      }
       check_discount: {
         Args: { _code: string; _subtotal: number }
         Returns: number
@@ -618,6 +622,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      my_delivery_details: { Args: never; Returns: Json }
       place_order: { Args: { p: Json }; Returns: string }
       review_rider: {
         Args: { _id: string; _status: string }
