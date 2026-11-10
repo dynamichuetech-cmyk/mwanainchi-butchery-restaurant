@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Plus, Trash2, Upload } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { BUTCHERY_CATEGORIES, KITCHEN_CATEGORIES } from "@/lib/catalog";
-import { images } from "@/lib/images";
+import { images, img, UPLOAD_PREFIX } from "@/lib/images";
 
 import type { Database } from "@/integrations/supabase/types";
 
@@ -28,31 +29,172 @@ export function ProductsAdmin() {
   const { data = [] } = useProducts();
   const refresh = useRefresh();
   const [filter, setFilter] = useState<"all" | "butchery" | "kitchen">("all");
-  const save = async (id: string, patch: ProductPatch) => {
+  const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const thumbs = useThumbs(data.map((p) => p.image_key));
+  const save = async (id: string, patch: ProductPatch, quiet = false) => {
     const { error } = await supabase.from("products").update(patch).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Saved"); refresh();
+    if (error) { toast.error(error.message); return false; }
+    if (!quiet) toast.success("Saved");
+    refresh(); return true;
   };
-  const shown = data.filter((p) => filter === "all" || p.section === filter);
+  const shown = data.filter((p) => (filter === "all" || p.section === filter) && p.name.toLowerCase().includes(q.toLowerCase()));
   return (
     <div className="mt-6 space-y-4">
       <NewProduct onDone={refresh} />
-      <div className="flex gap-2">{(["all", "butchery", "kitchen"] as const).map((f) => <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} className="rounded-full capitalize" onClick={() => setFilter(f)}>{f}</Button>)}</div>
+      <div className="flex flex-wrap gap-2">
+        {(["all", "butchery", "kitchen"] as const).map((f) => <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} className="rounded-full capitalize" onClick={() => setFilter(f)}>{f}</Button>)}
+        <Input className="h-9 max-w-xs" placeholder="Search products" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
       <ul className="divide-y rounded-2xl bg-card shadow-warm">
         {shown.map((p) => (
-          <li key={p.id} className="grid gap-3 p-4 sm:grid-cols-[1fr_110px_110px_auto_auto]">
-            <div className="min-w-0 space-y-1">
-              <Input aria-label="Name" defaultValue={p.name} onBlur={(e) => e.target.value.trim() && e.target.value !== p.name && save(p.id, { name: e.target.value.trim() })} />
-              <Input aria-label="Description" className="text-xs" defaultValue={p.description} onBlur={(e) => e.target.value !== p.description && save(p.id, { description: e.target.value })} />
-              <p className="text-xs text-muted-foreground">{p.section} · {p.category} · per {p.unit}</p>
+          <li key={p.id} className="p-4">
+            <div className="grid gap-3 sm:grid-cols-[72px_1fr_110px_110px_auto]">
+              <PhotoPicker src={thumbs[p.image_key] ?? img(p.image_key)} name={p.name} onUploaded={(key) => save(p.id, { image_key: key })} />
+              <div className="min-w-0 space-y-1">
+                <Input aria-label="Name" defaultValue={p.name} onBlur={(e) => e.target.value.trim() && e.target.value !== p.name && save(p.id, { name: e.target.value.trim() })} />
+                <p className="text-xs text-muted-foreground">{p.section} · {p.category} · per {p.unit} · stock {Number(p.stock)}</p>
+              </div>
+              <label className="text-xs">Price<Input type="number" min={0} defaultValue={Number(p.price)} onBlur={(e) => { const v = Number(e.target.value); if (v > 0 && v !== Number(p.price)) save(p.id, { price: v }); }} /></label>
+              <label className="text-xs">Offer price<Input type="number" min={0} defaultValue={p.promo_price ?? ""} onBlur={(e) => { const v = num(e.target.value); if (v !== (p.promo_price == null ? null : Number(p.promo_price))) save(p.id, { promo_price: v }); }} /></label>
+              <div className="flex flex-wrap items-center gap-3 text-xs">
+                <label className="flex items-center gap-1"><Switch checked={p.available} onCheckedChange={(v) => save(p.id, { available: v })} /> On sale</label>
+                <label className="flex items-center gap-1"><Switch checked={p.featured} onCheckedChange={(v) => save(p.id, { featured: v })} /> Featured</label>
+                <label className="flex items-center gap-1"><Switch checked={p.bestseller} onCheckedChange={(v) => save(p.id, { bestseller: v })} /> Bestseller</label>
+                <Button size="sm" variant="outline" className="rounded-full" onClick={() => setEditing(editing === p.id ? null : p.id)}>{editing === p.id ? "Close" : "Edit details"}</Button>
+              </div>
             </div>
-            <label className="text-xs">Price<Input type="number" min={0} defaultValue={Number(p.price)} onBlur={(e) => { const v = Number(e.target.value); if (v > 0 && v !== Number(p.price)) save(p.id, { price: v }); }} /></label>
-            <label className="text-xs">Offer price<Input type="number" min={0} defaultValue={p.promo_price ?? ""} onBlur={(e) => { const v = num(e.target.value); if (v !== (p.promo_price == null ? null : Number(p.promo_price))) save(p.id, { promo_price: v }); }} /></label>
-            <label className="flex items-center gap-2 text-xs"><Switch checked={p.available} onCheckedChange={(v) => save(p.id, { available: v })} /> Available</label>
-            <label className="flex items-center gap-2 text-xs"><Switch checked={p.featured} onCheckedChange={(v) => save(p.id, { featured: v })} /> Featured</label>
+            {editing === p.id && <ProductDetails p={p} onSave={async (patch) => { if (await save(p.id, patch)) setEditing(null); }} />}
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+type Row = Database["public"]["Tables"]["products"]["Row"];
+function ProductDetails({ p, onSave }: { p: Row; onSave: (patch: ProductPatch) => void }) {
+  const addons = Array.isArray(p.customisations) ? (p.customisations as { name: string; price: number }[]) : [];
+  const [f, setF] = useState({
+    description: p.description, section: p.section, category: p.category, unit: p.unit, sell_type: p.sell_type,
+    min_qty: String(p.min_qty), step: String(p.step), prep: p.prep_options.join(", "),
+    addons: addons.map((a) => `${a.name}: ${a.price}`).join("\n"), serving_info: p.serving_info ?? "", prep_minutes: p.prep_minutes == null ? "" : String(p.prep_minutes), sort: String(p.sort),
+  });
+  const cats = f.section === "kitchen" ? KITCHEN_CATEGORIES : BUTCHERY_CATEGORIES;
+  const submit = () => {
+    const parsed: { name: string; price: number }[] = [];
+    for (const line of f.addons.split("\n").map((l) => l.trim()).filter(Boolean)) {
+      const m = line.match(/^(.+?)\s*[:\-]\s*(\d+(?:\.\d+)?)$/);
+      if (!m) { toast.error(`Extras must look like "Extra chips: 150" — check "${line}"`); return; }
+      parsed.push({ name: m[1]!.trim(), price: Number(m[2]) });
+    }
+    const min = Number(f.min_qty), step = Number(f.step);
+    if (!(min > 0) || !(step > 0)) { toast.error("Minimum quantity and step must be above 0"); return; }
+    onSave({ description: f.description.trim(), section: f.section, category: f.category, unit: f.unit, sell_type: f.sell_type, min_qty: min, step,
+      prep_options: f.prep.split(",").map((s) => s.trim()).filter(Boolean), customisations: parsed,
+      serving_info: f.serving_info.trim() || null, prep_minutes: f.prep_minutes === "" ? null : Number(f.prep_minutes), sort: Number(f.sort) || 0 });
+  };
+  return (
+    <div className="mt-4 grid gap-3 rounded-xl bg-muted p-4 sm:grid-cols-3">
+      <label className="text-xs sm:col-span-3">Description<Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></label>
+      <label className="text-xs">Section<select className={`${sel} w-full`} value={f.section} onChange={(e) => { const s = e.target.value; setF({ ...f, section: s, category: (s === "kitchen" ? KITCHEN_CATEGORIES : BUTCHERY_CATEGORIES)[0]! }); }}><option value="kitchen">Our Kitchen</option><option value="butchery">Butchery</option></select></label>
+      <label className="text-xs">Category<select className={`${sel} w-full`} value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{cats.map((c) => <option key={c}>{c}</option>)}</select></label>
+      <label className="text-xs">Sold<select className={`${sel} w-full`} value={f.sell_type} onChange={(e) => setF({ ...f, sell_type: e.target.value, unit: e.target.value === "weight" ? "kg" : f.unit === "kg" ? "piece" : f.unit })}><option value="unit">By the piece / plate</option><option value="weight">By weight (kg)</option></select></label>
+      <label className="text-xs">Unit name<Input value={f.unit} disabled={f.sell_type === "weight"} onChange={(e) => setF({ ...f, unit: e.target.value })} /></label>
+      <label className="text-xs">Minimum quantity<Input type="number" step="0.25" value={f.min_qty} onChange={(e) => setF({ ...f, min_qty: e.target.value })} /></label>
+      <label className="text-xs">Quantity step<Input type="number" step="0.25" value={f.step} onChange={(e) => setF({ ...f, step: e.target.value })} /></label>
+      <label className="text-xs sm:col-span-3">Preparation choices (comma separated, e.g. Whole, Cubed, Minced)<Input value={f.prep} onChange={(e) => setF({ ...f, prep: e.target.value })} /></label>
+      <label className="text-xs sm:col-span-2">Paid extras — one per line as "Name: price"<Textarea rows={4} placeholder={"Extra chips: 150\nKachumbari: 50"} value={f.addons} onChange={(e) => setF({ ...f, addons: e.target.value })} /></label>
+      <div className="space-y-3">
+        <label className="block text-xs">Serving info<Input placeholder="Serves 2" value={f.serving_info} onChange={(e) => setF({ ...f, serving_info: e.target.value })} /></label>
+        <label className="block text-xs">Prep time (minutes)<Input type="number" value={f.prep_minutes} onChange={(e) => setF({ ...f, prep_minutes: e.target.value })} /></label>
+        <label className="block text-xs">Display order<Input type="number" value={f.sort} onChange={(e) => setF({ ...f, sort: e.target.value })} /></label>
+      </div>
+      <Button className="w-fit rounded-full sm:col-span-3" onClick={submit}>Save details</Button>
+    </div>
+  );
+}
+
+/** Admin-side previews for uploaded photos (bucket is private; signed links). */
+function useThumbs(keys: string[]) {
+  const paths = [...new Set(keys.filter((k) => k.startsWith(UPLOAD_PREFIX)).map((k) => k.slice(UPLOAD_PREFIX.length)))];
+  const { data = {} } = useQuery({
+    queryKey: ["admin-thumbs", paths], enabled: paths.length > 0,
+    queryFn: async () => { const r = await supabase.storage.from("product-images").createSignedUrls(paths, 3600); return Object.fromEntries((r.data ?? []).map((x) => [UPLOAD_PREFIX + x.path, x.signedUrl])); },
+  });
+  return data as Record<string, string>;
+}
+
+function PhotoPicker({ src, name, onUploaded }: { src: string; name: string; onUploaded: (key: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const pick = async (file?: File) => {
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { toast.error("Use a JPG, PNG or WebP photo"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Photo must be under 5 MB"); return; }
+    setBusy(true);
+    const path = `${crypto.randomUUID()}.${file.type.split("/")[1]}`;
+    const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+    setBusy(false);
+    if (error) { toast.error("Upload failed: " + error.message); return; }
+    onUploaded(UPLOAD_PREFIX + path);
+  };
+  return (
+    <label className="group relative block h-[72px] w-[72px] cursor-pointer overflow-hidden rounded-xl" title="Change photo">
+      <img src={src} alt={name} className="h-full w-full object-cover" />
+      <span className="absolute inset-0 flex items-center justify-center bg-charcoal/60 text-[10px] font-semibold text-charcoal-foreground opacity-0 transition group-hover:opacity-100">{busy ? "Uploading…" : <><Upload className="mr-1 h-3 w-3" />Change</>}</span>
+      <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={busy} onChange={(e) => void pick(e.target.files?.[0])} />
+    </label>
+  );
+}
+
+export function DiscountsAdmin() {
+  const qc = useQueryClient();
+  const { data = [] } = useQuery({ queryKey: ["admin-discounts"], queryFn: async () => { const r = await supabase.from("discount_codes").select("*").order("code"); if (r.error) throw r.error; return r.data; } });
+  const [f, setF] = useState({ code: "", kind: "percent", value: "", min_order: "0" });
+  const reload = () => qc.invalidateQueries({ queryKey: ["admin-discounts"] });
+  const add = async () => {
+    const code = f.code.trim().toUpperCase(), value = Number(f.value);
+    if (!/^[A-Z0-9]{3,20}$/.test(code)) { toast.error("Code: 3–20 letters or numbers"); return; }
+    if (!(value > 0) || (f.kind === "percent" && value > 100)) { toast.error("Enter a valid discount value"); return; }
+    const { error } = await supabase.from("discount_codes").insert({ code, kind: f.kind, value, min_order: Number(f.min_order) || 0 });
+    if (error) { toast.error(error.message.includes("duplicate") ? "That code already exists" : error.message); return; }
+    setF({ ...f, code: "", value: "" }); toast.success("Discount code added"); reload();
+  };
+  const toggle = async (code: string, active: boolean) => { const { error } = await supabase.from("discount_codes").update({ active }).eq("code", code); if (error) toast.error(error.message); else reload(); };
+  return (
+    <div className="mt-6 space-y-4">
+      <div className="grid gap-2 rounded-2xl bg-card p-4 shadow-warm sm:grid-cols-5">
+        <Input placeholder="CODE" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value })} />
+        <select aria-label="Type" className={sel} value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })}><option value="percent">% off</option><option value="fixed">KES off</option></select>
+        <Input type="number" placeholder={f.kind === "percent" ? "Percent" : "Amount (KES)"} value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} />
+        <Input type="number" placeholder="Min. order (KES)" value={f.min_order} onChange={(e) => setF({ ...f, min_order: e.target.value })} />
+        <Button className="rounded-full" onClick={add}><Plus className="h-4 w-4" /> Add code</Button>
+      </div>
+      {!data.length ? <p className="text-muted-foreground">No discount codes yet.</p> :
+        <ul className="divide-y rounded-2xl bg-card shadow-warm">{data.map((d) => (
+          <li key={d.code} className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div><p className="font-mono font-bold">{d.code}</p><p className="text-xs text-muted-foreground">{d.kind === "percent" ? `${Number(d.value)}% off` : `KES ${Number(d.value)} off`}{Number(d.min_order) ? ` · min. order KES ${Number(d.min_order)}` : ""}</p></div>
+            <label className="flex items-center gap-2 text-xs"><Switch checked={d.active} onCheckedChange={(v) => void toggle(d.code, v)} /> Active</label>
+          </li>))}</ul>}
+    </div>
+  );
+}
+
+export function SettingsAdmin() {
+  const refresh = useRefresh();
+  const { data } = useQuery({ queryKey: ["admin-settings"], queryFn: async () => (await supabase.from("store_settings").select("*").eq("id", 1).maybeSingle()).data });
+  if (!data) return <p className="mt-6 text-muted-foreground">Loading settings…</p>;
+  const save = async (patch: Database["public"]["Tables"]["store_settings"]["Update"]) => {
+    const { error } = await supabase.from("store_settings").update(patch).eq("id", 1);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Saved"); refresh();
+  };
+  return (
+    <div className="mt-6 grid gap-4 rounded-2xl bg-card p-5 shadow-warm sm:grid-cols-2">
+      <label className="text-sm">Kitchen opens<Input type="time" defaultValue={data.kitchen_open.slice(0, 5)} onBlur={(e) => e.target.value && save({ kitchen_open: e.target.value })} /></label>
+      <label className="text-sm">Kitchen closes<Input type="time" defaultValue={data.kitchen_close.slice(0, 5)} onBlur={(e) => e.target.value && save({ kitchen_close: e.target.value })} /></label>
+      <label className="text-sm sm:col-span-2">Announcement bar (top of every page)<Input defaultValue={data.announcement} maxLength={160} onBlur={(e) => e.target.value !== data.announcement && save({ announcement: e.target.value })} /></label>
+      <label className="flex items-center gap-2 text-sm"><Switch checked={data.scheduled_enabled} onCheckedChange={(v) => save({ scheduled_enabled: v })} /> Allow scheduled orders</label>
     </div>
   );
 }

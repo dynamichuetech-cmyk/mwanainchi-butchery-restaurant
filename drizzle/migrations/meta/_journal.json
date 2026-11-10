@@ -71,6 +71,20 @@
       "when": 1794346735691,
       "tag": "0009_rider_dashboard_location_earnings",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794347471404,
+      "tag": "0010_admin_full_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794347479820,
+      "tag": "0011_product_images_policies",
+      "breakpoints": true
     }
   ]
 }

@@ -57,7 +57,7 @@ export const reviewRider = createServerFn({method:'POST'}).middleware([requireSu
 });
 export const riderApplications = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async ({context}) => {
  const {data:allowed}=await context.supabase.rpc('has_role',{_user_id:context.userId,_role:'admin'}); if(!allowed) throw new Error('Access denied');
- const {data,error}=await context.supabase.from('rider_profiles').select('*').order('created_at',{ascending:false}); if(error) throw new Error('Unable to load applications');return data;
+ const {data,error}=await context.supabase.from('rider_profiles').select('*, profiles(full_name, email)').order('created_at',{ascending:false}); if(error) throw new Error('Unable to load applications');return data;
 });
 export const riderAssignments = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async ({context}) => {
  const {data:rider,error:re}=await context.supabase.from('rider_profiles').select('approval_status').eq('user_id',context.userId).maybeSingle();

@@ -8,4 +8,6 @@ import platter from "@/assets/platter.jpg";
 import drinks from "@/assets/drinks.jpg";
 
 export const images: Record<string, string> = { hero, beef, chicken, burger, fish, pork, platter, drinks };
-export const img = (key: string) => images[key] ?? beef;
+/** Bundled key, or a full URL for an uploaded photo (signed by getCatalog). */
+export const img = (key: string) => (/^https?:\/\//.test(key) ? key : images[key] ?? beef);
+export const UPLOAD_PREFIX = "upload:";

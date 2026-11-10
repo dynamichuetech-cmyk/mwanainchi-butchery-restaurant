@@ -39,3 +39,4 @@ use the editor.
 - Checkout submits through an authenticated TanStack server function to place_order, never a parallel Express service. Why: the existing server runtime and database function own verified identity and pricing.
 - Private admin entry is a public sign-in surface with no registration; dashboard routes are unnested under the managed authenticated layout and revalidate active administrator access server-side. Why: direct URLs remain secure without exposing private entry in storefront menus.
 - Rider signup metadata is only an application request: the trusted signup trigger assigns a nonprivileged rider role and pending profile; approval and delivery transitions are locked database functions. Why: browser metadata cannot establish approval or privileged access.
+- Uploaded product photos live in the private `product-images` bucket; products store `upload:<path>` in image_key and getCatalog swaps it for a signed URL. Why: workspace blocks public buckets.
