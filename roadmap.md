@@ -1,4 +1,5 @@
 # Mwanainchi 2.0 roadmap
+- [ ] Authentication repair: shared session, verified roles, safe redirects, checkout and logout; security tests and delivery report
 - [x] Brand, homepage, butchery (weight-based), Our Kitchen (customisations), shop/search
 - [x] Mixed cart, discount codes, 5-step checkout with delivery zones, M-Pesa/card/cash selection
 - [x] Customer accounts: sign-up/in, Google, password reset, profile, addresses, orders, payments, reorder
