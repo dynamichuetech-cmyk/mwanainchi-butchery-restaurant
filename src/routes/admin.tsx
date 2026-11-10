@@ -1,0 +1,15 @@
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { Eye, EyeOff, LockKeyhole } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { requireAdminAccess } from '@/lib/auth.functions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+export const Route=createFileRoute('/admin')({head:()=>({meta:[{title:'Private sign in | Mwanainchi'},{name:'description',content:'Restricted Mwanainchi business access.'},{property:'og:title',content:'Private sign in | Mwanainchi'},{property:'og:description',content:'Restricted business access.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'},{name:'robots',content:'noindex,nofollow'}]}),component:AdminLogin});
+function AdminLogin(){
+ const auth=useAuth(); const navigate=useNavigate();const [email,setEmail]=useState('');const [password,setPassword]=useState('');const [visible,setVisible]=useState(false);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+ async function open(){try{await requireAdminAccess();await navigate({to:'/admin/dashboard',replace:true});}catch{setError('Access denied.');}}
+ useEffect(()=>{if(auth.isAuthenticated) void open();},[auth.isAuthenticated]);
+ async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{await auth.login(email,password);await open();}catch{setError('Unable to authenticate or access denied.');}finally{setBusy(false);}}
+ return <div className="mx-auto max-w-md px-4 py-16"><LockKeyhole className="mb-5 h-8 w-8 text-muted-foreground"/><p className="text-sm font-semibold text-muted-foreground">Mwanainchi · Business access</p><h1 className="mt-2 text-3xl font-bold">Private sign in</h1>{auth.isLoading?<p role="status" className="mt-6">Checking access…</p>:<form onSubmit={submit} className="mt-8 space-y-5">{error && <p role="alert" className="text-sm text-destructive">{error}</p>}<label className="block text-sm">Email<Input required type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)}/></label><label className="block text-sm">Password<div className="relative"><Input required type={visible?'text':'password'} autoComplete="current-password" className="pr-12" value={password} onChange={e=>setPassword(e.target.value)}/><Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0" aria-label={visible?'Hide password':'Show password'} onClick={()=>setVisible(!visible)}>{visible?<EyeOff/>:<Eye/>}</Button></div></label><Button disabled={busy} className="w-full">{busy?'Checking access…':'Sign in'}</Button></form>}</div>;
+}

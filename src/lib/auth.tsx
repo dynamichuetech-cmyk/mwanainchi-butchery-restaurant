@@ -5,10 +5,10 @@ import { useRouter } from '@tanstack/react-router';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { getAuthIdentity } from './auth.functions';
-import { adminRole, authError, type Role, validateRegistration } from './auth-rules';
+import { adminRole, authError, type Role, type RiderStatus, validateRegistration } from './auth-rules';
 
-type State = { user: User | null; session: Session | null; profile: Database['public']['Tables']['profiles']['Row'] | null; role: Role | null; isLoading: boolean; error: string | null };
-const initial: State = { user: null, session: null, profile: null, role: null, isLoading: true, error: null };
+type State = { user: User | null; session: Session | null; profile: Database['public']['Tables']['profiles']['Row'] | null; role: Role | null; riderStatus: RiderStatus | null; isLoading: boolean; error: string | null };
+const initial: State = { user: null, session: null, profile: null, role: null, riderStatus: null, isLoading: true, error: null };
 let state = initial;
 let revision = 0;
 const listeners = new Set<() => void>();
@@ -48,10 +48,10 @@ async function login(email: string, password: string) {
   if (!resolved.user || resolved.error) throw new Error(resolved.error ?? 'Session expired');
   return resolved;
 }
-async function register(input: { name: string; email: string; phone: string; password: string; confirmation: string }) {
+async function register(input: { name: string; email: string; phone: string; password: string; confirmation: string; kind?: "customer" | "rider" }) {
   const invalid = validateRegistration(input);
   if (invalid) throw new Error(invalid);
-  const { data, error } = await supabase.auth.signUp({ email: input.email.trim(), password: input.password, options: { emailRedirectTo: window.location.origin + '/auth', data: { full_name: input.name.trim(), phone: input.phone.trim() } } });
+  const { data, error } = await supabase.auth.signUp({ email: input.email.trim(), password: input.password, options: { emailRedirectTo: window.location.origin + '/auth?kind=' + (input.kind ?? 'customer'), data: { full_name: input.name.trim(), phone: input.phone.trim(), application_kind: input.kind === "rider" ? "rider" : "customer" } } });
   if (error) throw error;
   if (data.user?.identities?.length === 0) throw new Error('Email already registered');
   if (data.session) return { pendingVerification: false, identity: await hydrate(data.session) };
@@ -73,10 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let previousId: string | undefined;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       // Return immediately: auth methods must never be awaited inside the auth lock.
-      if (event === 'TOKEN_REFRESHED' && state.user?.id === session?.user.id) {
-        publish({ ...state, session }); return;
-      }
-      if (!['INITIAL_SESSION', 'SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED', 'PASSWORD_RECOVERY'].includes(event)) return;
+
+      if (!['INITIAL_SESSION', 'SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED', 'PASSWORD_RECOVERY', 'TOKEN_REFRESHED'].includes(event)) return;
       if (event === 'SIGNED_IN' && state.user?.id === session?.user.id && !state.isLoading) return;
       setTimeout(() => {
         if (!active) return;
@@ -100,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
     ++revision;
     publish({ ...initial, isLoading: false });
-    await router.navigate({ to: '/auth', replace: true });
+    await router.navigate({ to: window.location.pathname.startsWith('/admin') ? '/admin' : '/auth', replace: true });
   };
   return <AuthContext.Provider value={{ ...snapshot, isAuthenticated: !!snapshot.user && !snapshot.isLoading, isAdmin: adminRole(snapshot.role), isCustomer: snapshot.role === 'customer', isRider: snapshot.role === 'rider', login, register, logout, refreshProfile, refreshSession }}>{children}</AuthContext.Provider>;
 }

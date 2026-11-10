@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_access: {
+        Row: {
+          active: boolean
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           created_at: string
@@ -81,6 +96,51 @@ export type Database = {
           phone?: string | null
         }
         Relationships: []
+      }
+      delivery_assignments: {
+        Row: {
+          id: string
+          latitude: number | null
+          longitude: number | null
+          order_id: string
+          rider_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          order_id: string
+          rider_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          order_id?: string
+          rider_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_assignments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_assignments_rider_id_fkey"
+            columns: ["rider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_zones: {
         Row: {
@@ -451,6 +511,47 @@ export type Database = {
         }
         Relationships: []
       }
+      rider_profiles: {
+        Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          phone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          phone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          phone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rider_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_settings: {
         Row: {
           announcement: string
@@ -504,6 +605,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_as_rider: { Args: never; Returns: undefined }
       check_discount: {
         Args: { _code: string; _subtotal: number }
         Returns: number
@@ -517,6 +619,19 @@ export type Database = {
         Returns: boolean
       }
       place_order: { Args: { p: Json }; Returns: string }
+      review_rider: {
+        Args: { _id: string; _status: string }
+        Returns: undefined
+      }
+      update_my_delivery: {
+        Args: {
+          _id: string
+          _latitude?: number
+          _longitude?: number
+          _status: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:

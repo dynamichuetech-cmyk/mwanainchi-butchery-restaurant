@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { adminRole, authError, loginDestination, resolveRole, safeDestination, validateRegistration } from './auth-rules';
+import { adminRole, authError, loginDestination, resolveRole, safeDestination, validateRegistration, canDeliver, riderDestination } from './auth-rules';
 describe('Authentication rules', () => {
   it('gives admin precedence over customer', () => expect(resolveRole(['customer','admin'])).toBe('admin'));
   it('does not assume a missing role is customer', () => expect(resolveRole([])).toBeNull());
   it('does not give riders administrator access', () => expect(adminRole(resolveRole(['rider']))).toBe(false));
   it('recognises super administrators', () => expect(adminRole('super_admin')).toBe(true));
   it('returns a customer to checkout', () => expect(loginDestination('customer','/checkout')).toBe('/checkout'));
-  it('sends administrators to their dashboard', () => expect(loginDestination('admin','/account')).toBe('/admin'));
+  it('sends administrators to their dashboard', () => expect(loginDestination('admin','/account')).toBe('/admin/dashboard'));
+  it('routes approved riders to deliveries',()=>expect(riderDestination('approved')).toBe('/rider'));
+  it.each(['pending_approval','rejected','suspended'] as const)('restricts %s riders',status=>expect(canDeliver('rider',status)).toBe(false));
+  it('approved customer cannot operate rider deliveries',()=>expect(canDeliver('customer','approved')).toBe(false));
+  it('approved rider can operate deliveries',()=>expect(canDeliver('rider','approved')).toBe(true));
+  it('customer cannot return into rider routes',()=>expect(loginDestination('customer','/rider')).toBe('/account'));
   it('blocks customer admin destinations', () => expect(loginDestination('customer','/admin')).toBe('/account'));
   it.each(['https://evil.test','//evil.test','/\\evil.test','/auth','/reset-password'])('rejects unsafe or looping destination %s', (path) => expect(safeDestination(path)).toBeUndefined());
   const valid = {name:'Customer',email:'customer@example.test',phone:'0712345678',password:'password123',confirmation:'password123'};

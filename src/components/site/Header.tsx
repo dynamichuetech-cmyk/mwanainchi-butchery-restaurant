@@ -30,8 +30,8 @@ export function Logo({ light, size = "md" }: { light?: boolean; size?: "md" | "l
 export function Header({ announcement }: { announcement?: string | undefined }) {
   const { count } = useCart();
   const auth = useAuth();
-  const accountTo = auth.isAdmin ? "/admin" : auth.isAuthenticated ? "/account" : "/auth";
-  const accountLabel = auth.isLoading ? "Checking account…" : auth.isAdmin ? "Admin dashboard" : auth.isAuthenticated ? "My Account" : "Sign in";
+  const accountTo = auth.isRider ? "/rider" : auth.isAuthenticated ? "/account" : "/auth";
+  const accountLabel = auth.isLoading ? "Checking account…" : auth.isRider ? "Rider account" : auth.isAuthenticated ? "My Account" : "Sign in";
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);

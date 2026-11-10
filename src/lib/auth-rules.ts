@@ -12,9 +12,10 @@ export function safeDestination(value?: string): string | undefined {
 }
 export function loginDestination(role: Role | null, intended?: string) {
   const target = safeDestination(intended);
-  if (adminRole(role)) return target?.startsWith('/admin') ? target : '/admin';
+  if (adminRole(role)) return target?.startsWith('/admin/') ? target : '/admin/dashboard';
   if (target?.startsWith('/admin')) return '/account';
-  if (role === 'customer') return target ?? '/account';
+  if (role === 'rider') return '/rider';
+  if (role === 'customer') return target?.startsWith('/rider') ? '/account' : target ?? '/account';
   return '/account';
 }
 export function validateRegistration(input: { name: string; email: string; phone: string; password: string; confirmation: string }) {
@@ -38,3 +39,6 @@ export function authError(error: unknown) {
   if (/permission|row.level/i.test(message)) return 'Your account does not have permission for this action.';
   return 'We could not complete this request. Please try again.';
 }
+export type RiderStatus = 'pending_approval' | 'approved' | 'rejected' | 'suspended';
+export const canDeliver = (role: Role | null, status: RiderStatus | null) => role === 'rider' && status === 'approved';
+export function riderDestination(status: RiderStatus | null) { return status === 'approved' ? '/rider' : '/rider/status'; }

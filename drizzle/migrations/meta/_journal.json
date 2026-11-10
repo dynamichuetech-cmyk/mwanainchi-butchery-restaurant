@@ -43,6 +43,13 @@
       "when": 1794343403945,
       "tag": "0005_scope_profile_fields_and_superadmin_access",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794344033241,
+      "tag": "0006_rider_applications_and_private_access",
+      "breakpoints": true
     }
   ]
 }

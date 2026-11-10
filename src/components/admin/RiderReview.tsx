@@ -1,0 +1,10 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { riderApplications, reviewRider } from '@/lib/auth.functions';
+import { Button } from '@/components/ui/button';
+export function RiderReview() {
+  const qc=useQueryClient(); const [message,setMessage]=useState(''); const [busy,setBusy]=useState<string|null>(null);
+  const query=useQuery({queryKey:['rider-applications'],queryFn:()=>riderApplications()});
+  async function decide(id:string,status:'approved'|'rejected'|'suspended') {setBusy(id);setMessage('');try{await reviewRider({data:{id,status}});await qc.invalidateQueries({queryKey:['rider-applications']});}catch(e){setMessage(e instanceof Error?e.message:'Unable to update application');}finally{setBusy(null);}}
+  return <section className="mt-6"><h2 className="text-2xl font-bold">Rider applications</h2>{message && <p role="alert" className="mt-3 text-destructive">{message}</p>}{query.isPending?<p role="status">Loading applications…</p>:query.isError?<p role="alert">Unable to load applications.</p>:!query.data?.length?<p className="py-8 text-muted-foreground">No applications yet.</p>:<ul className="mt-4 divide-y">{query.data.map(r=><li key={r.id} className="flex flex-wrap items-center justify-between gap-4 py-5"><div><p className="font-semibold">{r.phone || 'Rider application'}</p><p className="text-sm text-muted-foreground">{r.approval_status.replaceAll('_',' ')} · {new Date(r.created_at).toLocaleDateString()}</p></div><div className="flex flex-wrap gap-2">{(['approved','rejected','suspended'] as const).map(status=><Button key={status} size="sm" variant={status==='approved'?'default':'outline'} disabled={busy===r.id || status===r.approval_status} onClick={()=>void decide(r.id,status)}>{status==='approved'?'Approve':status==='rejected'?'Reject':'Suspend'}</Button>)}</div></li>)}</ul>}</section>;
+}

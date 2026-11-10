@@ -1,0 +1,3 @@
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
+import { getAuthIdentity } from '@/lib/auth.functions';
+export const Route=createFileRoute('/_authenticated/rider')({beforeLoad:async()=>{const identity=await getAuthIdentity();if(identity.role!=='rider')throw redirect({to:'/auth',search:{kind:'rider'}});return {riderStatus:identity.riderStatus};},pendingComponent:()=> <p role="status" className="py-20 text-center">Checking rider account…</p>,component:()=> <Outlet/>});

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ButcheryRouteImport } from './routes/butchery'
 import { Route as CartRouteImport } from './routes/cart'
@@ -20,9 +21,12 @@ import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
+import { Route as AuthenticatedRiderRouteImport } from './routes/_authenticated/rider'
+import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated/admin_.dashboard'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
+import { Route as AuthenticatedRiderIndexRouteImport } from './routes/_authenticated/rider.index'
+import { Route as AuthenticatedRiderStatusRouteImport } from './routes/_authenticated/rider.status'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,6 +40,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -78,26 +87,44 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRiderRoute = AuthenticatedRiderRouteImport.update({
+  id: '/rider',
+  path: '/rider',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminDashboardRoute =
+  AuthenticatedAdminDashboardRouteImport.update({
+    id: '/admin_/dashboard',
+    path: '/admin/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOrdersOrderIdRoute =
   AuthenticatedOrdersOrderIdRouteImport.update({
     id: '/orders/$orderId',
     path: '/orders/$orderId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRiderIndexRoute = AuthenticatedRiderIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRiderRoute,
+} as any)
+const AuthenticatedRiderStatusRoute =
+  AuthenticatedRiderStatusRouteImport.update({
+    id: '/status',
+    path: '/status',
+    getParentRoute: () => AuthenticatedRiderRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/butchery': typeof ButcheryRoute
   '/cart': typeof CartRoute
@@ -106,13 +133,17 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
   '/account': typeof AuthenticatedAccountRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/rider': typeof AuthenticatedRiderRouteWithChildren
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/rider/status': typeof AuthenticatedRiderStatusRoute
+  '/rider/': typeof AuthenticatedRiderIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/butchery': typeof ButcheryRoute
   '/cart': typeof CartRoute
@@ -121,15 +152,18 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
   '/account': typeof AuthenticatedAccountRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/rider/status': typeof AuthenticatedRiderStatusRoute
+  '/rider': typeof AuthenticatedRiderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/butchery': typeof ButcheryRoute
   '/cart': typeof CartRoute
@@ -138,15 +172,19 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
+  '/_authenticated/rider': typeof AuthenticatedRiderRouteWithChildren
+  '/_authenticated/admin_/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/_authenticated/rider/status': typeof AuthenticatedRiderStatusRoute
+  '/_authenticated/rider/': typeof AuthenticatedRiderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
     | '/auth'
     | '/butchery'
     | '/cart'
@@ -155,13 +193,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/shop'
     | '/account'
-    | '/admin'
     | '/checkout'
+    | '/rider'
+    | '/admin/dashboard'
     | '/orders/$orderId'
+    | '/rider/status'
+    | '/rider/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/admin'
     | '/auth'
     | '/butchery'
     | '/cart'
@@ -170,14 +212,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/shop'
     | '/account'
-    | '/admin'
     | '/checkout'
+    | '/admin/dashboard'
     | '/orders/$orderId'
+    | '/rider/status'
+    | '/rider'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/admin'
     | '/auth'
     | '/butchery'
     | '/cart'
@@ -186,15 +231,19 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/shop'
     | '/_authenticated/account'
-    | '/_authenticated/admin'
     | '/_authenticated/checkout'
+    | '/_authenticated/rider'
+    | '/_authenticated/admin_/dashboard'
     | '/_authenticated/orders/$orderId'
+    | '/_authenticated/rider/status'
+    | '/_authenticated/rider/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   ButcheryRoute: typeof ButcheryRoute
   CartRoute: typeof CartRoute
@@ -225,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -283,18 +339,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/checkout': {
       id: '/_authenticated/checkout'
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rider': {
+      id: '/_authenticated/rider'
+      path: '/rider'
+      fullPath: '/rider'
+      preLoaderRoute: typeof AuthenticatedRiderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin_/dashboard': {
+      id: '/_authenticated/admin_/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/orders/$orderId': {
@@ -304,20 +367,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersOrderIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rider/': {
+      id: '/_authenticated/rider/'
+      path: '/'
+      fullPath: '/rider/'
+      preLoaderRoute: typeof AuthenticatedRiderIndexRouteImport
+      parentRoute: typeof AuthenticatedRiderRoute
+    }
+    '/_authenticated/rider/status': {
+      id: '/_authenticated/rider/status'
+      path: '/status'
+      fullPath: '/rider/status'
+      preLoaderRoute: typeof AuthenticatedRiderStatusRouteImport
+      parentRoute: typeof AuthenticatedRiderRoute
+    }
   }
 }
 
+interface AuthenticatedRiderRouteChildren {
+  AuthenticatedRiderStatusRoute: typeof AuthenticatedRiderStatusRoute
+  AuthenticatedRiderIndexRoute: typeof AuthenticatedRiderIndexRoute
+}
+
+const AuthenticatedRiderRouteChildren: AuthenticatedRiderRouteChildren = {
+  AuthenticatedRiderStatusRoute: AuthenticatedRiderStatusRoute,
+  AuthenticatedRiderIndexRoute: AuthenticatedRiderIndexRoute,
+}
+
+const AuthenticatedRiderRouteWithChildren =
+  AuthenticatedRiderRoute._addFileChildren(AuthenticatedRiderRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
+  AuthenticatedRiderRoute: typeof AuthenticatedRiderRouteWithChildren
+  AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
+  AuthenticatedRiderRoute: AuthenticatedRiderRouteWithChildren,
+  AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRoute,
 }
 
@@ -328,6 +420,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   ButcheryRoute: ButcheryRoute,
   CartRoute: CartRoute,

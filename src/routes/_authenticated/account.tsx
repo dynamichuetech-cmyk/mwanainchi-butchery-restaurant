@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/account")({
 
 function Account() {
   const { user } = Route.useRouteContext();
-  const { isAdmin, logout: signOut } = useAuth();
+  const { logout: signOut } = useAuth();
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-14">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -31,7 +31,7 @@ function Account() {
           <h1 className="text-4xl font-bold sm:text-5xl">Karibu tena.</h1>
           <p className="text-muted-foreground">{user.email}</p>
         </div>
-        <div className="flex gap-2">{isAdmin && <Button asChild className="rounded-full"><Link to="/admin">Admin dashboard</Link></Button>}<Button variant="outline" className="rounded-full" onClick={signOut}><LogOut className="mr-2 h-4 w-4" /> Sign out</Button></div>
+        <div className="flex gap-2"><Button variant="outline" className="rounded-full" onClick={signOut}><LogOut className="mr-2 h-4 w-4" /> Sign out</Button></div>
       </div>
       <Tabs defaultValue="orders" className="mt-10">
         <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">

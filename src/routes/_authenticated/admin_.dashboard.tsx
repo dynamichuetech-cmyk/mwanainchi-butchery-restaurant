@@ -10,14 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatKES, formatQty } from "@/lib/pricing";
 import { useAuth } from "@/lib/auth";
 import { requireAdminAccess } from "@/lib/auth.functions";
+import { RiderReview } from "@/components/admin/RiderReview";
 import { PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/orders";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin_/dashboard")({
   head: () => ({ meta: [{ title: "Admin | Mwanainchi" }, { name: "description", content: "Mwanainchi authorised business dashboard." }, { property: "og:title", content: "Admin | Mwanainchi" }, { property: "og:description", content: "Mwanainchi business administration." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   // UI gate only; the database policies are what actually block non-admins.
   beforeLoad: async () => {
     try { await requireAdminAccess(); }
-    catch { throw redirect({ to: "/auth", search: { admin: true, redirect: "/admin" } }); }
+    catch { throw redirect({ to: "/admin" }); }
   },
   pendingComponent: () => <p role="status" className="py-32 text-center text-muted-foreground">Checking administrator access…</p>,
   component: Admin,
@@ -34,9 +35,10 @@ function Admin() {
       <h1 className="text-4xl font-bold sm:text-5xl">Business dashboard</h1>
       <Button variant="outline" className="mt-4 rounded-full" onClick={() => void logout()}>Sign out</Button>
       <Tabs defaultValue="orders" className="mt-8">
-        <TabsList><TabsTrigger value="orders">Orders</TabsTrigger><TabsTrigger value="products">Products</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="orders">Orders</TabsTrigger><TabsTrigger value="products">Products</TabsTrigger><TabsTrigger value="riders">Riders</TabsTrigger></TabsList>
         <TabsContent value="orders"><Orders /></TabsContent>
         <TabsContent value="products"><Products /></TabsContent>
+        <TabsContent value="riders"><RiderReview /></TabsContent>
       </Tabs>
     </div>
   );

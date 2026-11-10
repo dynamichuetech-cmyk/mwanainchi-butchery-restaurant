@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { adminRole, resolveRole } from './auth-rules';
+import { resolveRole } from './auth-rules';
 import { z } from 'zod';
 
 export const getAuthIdentity = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
@@ -13,12 +13,17 @@ export const getAuthIdentity = createServerFn({ method: 'POST' }).middleware([re
     context.supabase.from('user_roles').select('role').eq('user_id', context.userId),
   ]);
   if (profile.error || roles.error) throw new Error('Profile not found');
-  return { user: verified.user, profile: profile.data, role: resolveRole(roles.data.map((r) => r.role)) };
+  const [rider, access] = await Promise.all([
+    context.supabase.from('rider_profiles').select('*').eq('user_id',context.userId).maybeSingle(),
+    context.supabase.from('account_access').select('active').eq('user_id',context.userId).maybeSingle(),
+  ]);
+  if (rider.error || access.error || access.data?.active === false) throw new Error('Access denied');
+  return { user: verified.user, profile: profile.data, role: resolveRole(roles.data.map((r) => r.role)), riderStatus: rider.data?.approval_status as import('./auth-rules').RiderStatus | null ?? null };
 });
 
 export const requireAdminAccess = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  const { data, error } = await context.supabase.from('user_roles').select('role').eq('user_id', context.userId);
-  if (error || !adminRole(resolveRole(data.map((r) => r.role)))) throw new Error('Account not authorised for administration');
+  const { data, error } = await context.supabase.rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+  if (error || data !== true) throw new Error('Account not authorised for administration');
   return true;
 });
 
@@ -41,4 +46,24 @@ export const submitOrder = createServerFn({ method: 'POST' }).middleware([requir
     throw new Error(safe ? error.message : 'Unable to place your order. Check the items and delivery details.');
   }
   return id;
+});
+export const applyAsRider = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async ({context}) => {
+  const {error}=await context.supabase.rpc('apply_as_rider'); if(error) throw new Error('Unable to submit your application'); return true;
+});
+export const reviewRider = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(z.object({id:z.string().uuid(),status:z.enum(['approved','rejected','suspended'])})).handler(async ({data,context}) => {
+ const {data:allowed}=await context.supabase.rpc('has_role',{_user_id:context.userId,_role:'admin'}); if(!allowed) throw new Error('Access denied');
+ const {error}=await context.supabase.rpc('review_rider',{_id:data.id,_status:data.status}); if(error) throw new Error(/Email verification/.test(error.message)?'Email verification required before approval':'Unable to update application'); return true;
+});
+export const riderApplications = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async ({context}) => {
+ const {data:allowed}=await context.supabase.rpc('has_role',{_user_id:context.userId,_role:'admin'}); if(!allowed) throw new Error('Access denied');
+ const {data,error}=await context.supabase.from('rider_profiles').select('*').order('created_at',{ascending:false}); if(error) throw new Error('Unable to load applications');return data;
+});
+export const riderAssignments = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).handler(async ({context}) => {
+ const {data:rider,error:re}=await context.supabase.from('rider_profiles').select('approval_status').eq('user_id',context.userId).maybeSingle();
+ const {data:role}=await context.supabase.rpc('has_role',{_user_id:context.userId,_role:'rider'});
+ if(re || !role || rider?.approval_status!=='approved') throw new Error('Approval required');
+ const {data,error}=await context.supabase.from('delivery_assignments').select('*').eq('rider_id',context.userId);if(error) throw new Error('Unable to load deliveries');return data;
+});
+export const updateDelivery = createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator(z.object({id:z.string().uuid(),status:z.enum(['out_for_delivery','delivered']),latitude:z.number().min(-90).max(90).optional(),longitude:z.number().min(-180).max(180).optional()})).handler(async ({context,data}) => {
+ const {error}=await context.supabase.rpc('update_my_delivery',{_id:data.id,_status:data.status,...(data.latitude===undefined?{}:{_latitude:data.latitude}),...(data.longitude===undefined?{}:{_longitude:data.longitude})});if(error) throw new Error('Unable to update this delivery');return true;
 });
