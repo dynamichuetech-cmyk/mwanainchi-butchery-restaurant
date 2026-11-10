@@ -33,3 +33,4 @@ use the editor.
 - Orders are created only through the `place_order` database function, which re-prices items, checks stock/zone/discount and deducts stock — never insert orders from the client. Why: prices and availability must be validated server-side.
 - Product images are referenced by `image_key` mapped in `src/lib/images.ts`. Why: bundled assets, no storage needed yet.
 - Public catalogue (products, zones, settings) loads via the `getCatalog` server function with the publishable key. Why: SSR-safe public reads.
+- Admin access comes only from the user_roles table (has_role); the owner email is auto-granted admin by a trigger once its email is confirmed. Why: no hardcoded credentials, no client-side role checks.

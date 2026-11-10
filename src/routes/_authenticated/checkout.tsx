@@ -107,10 +107,11 @@ function Checkout() {
   };
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 lg:grid-cols-[1fr_380px]">
+    <div className="mx-auto grid max-w-7xl gap-10 px-4 py-8 sm:py-14 lg:grid-cols-[1fr_380px]">
       <div>
-        <h1 className="mb-8 text-5xl font-bold">Checkout</h1>
-        <ol className="mb-8 flex flex-wrap gap-2">
+        <h1 className="mb-4 text-4xl font-bold sm:mb-8 sm:text-5xl">Checkout</h1>
+        <p className="mb-3 text-sm text-muted-foreground sm:hidden">Step {step + 1} of 5 · {STEPS[step]}</p>
+        <ol className="mb-6 hidden flex-wrap gap-2 sm:mb-8 sm:flex">
           {STEPS.map((s, i) => (
             <li key={s} className={cn("flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold",
               i === step ? "bg-charcoal text-charcoal-foreground" : i < step ? "bg-leaf text-leaf-foreground" : "bg-muted text-muted-foreground",
@@ -120,7 +121,7 @@ function Checkout() {
           ))}
         </ol>
 
-        <div className="space-y-5 rounded-3xl bg-card p-8 shadow-warm">
+        <div className="space-y-4 rounded-3xl bg-card p-5 shadow-warm sm:space-y-5 sm:p-8">
           {step === 0 && (
             <>
               <h2 className="text-2xl font-bold">Your details</h2>
@@ -198,7 +199,7 @@ function Checkout() {
               </dl>
             </>
           )}
-          <div className="flex justify-between pt-4">
+          <div className="flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-between">
             {step > 0 ? <Button variant="outline" className="rounded-full" onClick={back}>Back</Button> : <Button asChild variant="ghost"><Link to="/cart">Edit cart</Link></Button>}
             {step < 4 ? <Button className="rounded-full px-8 font-bold" onClick={next}>Continue</Button>
               : <Button disabled={busy} className="rounded-full px-8 font-bold" onClick={place}>{busy ? "Placing order…" : `Place order · ${formatKES(total)}`}</Button>}
@@ -206,8 +207,8 @@ function Checkout() {
         </div>
       </div>
 
-      <aside className="h-fit space-y-3 rounded-2xl bg-charcoal p-6 text-charcoal-foreground lg:sticky lg:top-28">
-        <h2 className="text-2xl font-bold">Order summary</h2>
+      <aside className="order-first h-fit space-y-3 rounded-2xl bg-charcoal p-5 sm:p-6 lg:order-none text-charcoal-foreground lg:sticky lg:top-28">
+        <h2 className="text-xl font-bold sm:text-2xl">Order summary · {formatKES(total)}</h2>
         <ul className="space-y-2 text-sm">
           {cart.items.map((i) => (
             <li key={i.key} className="flex justify-between gap-2"><span className="opacity-80">{formatQty(i.qty, i.unit)} × {i.name}</span><span>{formatKES(lineTotal(i.unitPrice, i.qty))}</span></li>

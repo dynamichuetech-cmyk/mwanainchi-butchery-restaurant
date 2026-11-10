@@ -26,17 +26,17 @@ export function ProductCard({ product, onOpen }: { product: Product; onOpen: () 
         {promo && <span className="absolute left-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">Offer</span>}
         {out && <span className="absolute inset-0 flex items-center justify-center bg-charcoal/60 font-semibold text-charcoal-foreground">Unavailable</span>}
       </div>
-      <div className="flex flex-1 flex-col gap-1 p-4">
-        <span className="text-xs font-semibold uppercase tracking-wider text-leaf">{product.category}</span>
-        <h3 className="text-lg font-semibold leading-tight">{product.name}</h3>
-        {product.serving_info && <p className="text-sm text-muted-foreground">{product.serving_info}</p>}
-        <div className="mt-auto flex items-end justify-between pt-3">
+      <div className="flex flex-1 flex-col gap-1 p-3 sm:p-4">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-leaf sm:text-xs">{product.category}</span>
+        <h3 className="text-sm font-semibold leading-tight sm:text-lg">{product.name}</h3>
+        {product.serving_info && <p className="hidden text-sm text-muted-foreground sm:block">{product.serving_info}</p>}
+        <div className="mt-auto flex items-end justify-between gap-1 pt-2 sm:pt-3">
           <div>
-            <span className="text-lg font-bold">{formatKES(effectivePrice(product))}</span>
-            <span className="text-sm text-muted-foreground"> /{product.unit}</span>
-            {promo && <span className="ml-2 text-sm text-muted-foreground line-through">{formatKES(Number(product.price))}</span>}
+            <span className="text-sm font-bold sm:text-lg">{formatKES(effectivePrice(product))}</span>
+            <span className="text-xs text-muted-foreground sm:text-sm"> /{product.unit}</span>
+            {promo && <span className="ml-1 hidden text-sm sm:inline text-muted-foreground line-through">{formatKES(Number(product.price))}</span>}
           </div>
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-charcoal text-charcoal-foreground transition group-hover:bg-primary group-hover:text-primary-foreground">
+          <span className="flex h-8 w-8 shrink-0 items-center sm:h-9 sm:w-9 justify-center rounded-full bg-charcoal text-charcoal-foreground transition group-hover:bg-primary group-hover:text-primary-foreground">
             <Plus className="h-4 w-4" />
           </span>
         </div>
@@ -50,7 +50,7 @@ const WEIGHT_PRESETS = [0.5, 1, 1.5, 2, 3];
 export function AddToCartDialog({ product, onClose }: { product: Product | null; onClose: () => void }) {
   return (
     <Dialog open={!!product} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto p-0 sm:max-w-lg">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto rounded-2xl p-0">
         {product && <Body key={product.id} product={product} onClose={onClose} />}
       </DialogContent>
     </Dialog>
@@ -84,7 +84,7 @@ function Body({ product, onClose }: { product: Product; onClose: () => void }) {
   return (
     <>
       <img src={img(product.image_key)} alt={product.name} className="aspect-[16/9] w-full object-cover" />
-      <div className="space-y-5 p-6">
+      <div className="space-y-5 p-5 sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">{product.name}</DialogTitle>
           <DialogDescription>{product.description}</DialogDescription>
@@ -158,9 +158,9 @@ function Body({ product, onClose }: { product: Product; onClose: () => void }) {
         <Textarea placeholder={product.section === "kitchen" ? "Special requests (e.g. well done, no onions)" : "Notes for the butcher (optional)"}
           value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={200} />
 
-        <Button size="lg" className="w-full rounded-full text-base font-bold" onClick={add} disabled={qty < min || qty > stock}>
+        <div className="sticky bottom-0 -mx-5 -mb-5 border-t bg-background p-4 sm:static sm:m-0 sm:border-0 sm:p-0"><Button size="lg" className="w-full rounded-full text-base font-bold" onClick={add} disabled={qty < min || qty > stock}>
           <ShoppingBag className="mr-2 h-4 w-4" /> Add {formatQty(qty, product.unit)} · {formatKES(total)}
-        </Button>
+        </Button></div>
       </div>
     </>
   );

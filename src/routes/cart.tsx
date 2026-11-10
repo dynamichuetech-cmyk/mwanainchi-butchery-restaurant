@@ -51,20 +51,20 @@ function Cart() {
     );
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 lg:grid-cols-[1fr_380px]">
+    <div className="mx-auto grid max-w-7xl gap-10 px-4 py-8 sm:py-14 lg:grid-cols-[1fr_380px]">
       <div>
-        <h1 className="mb-8 text-5xl font-bold">Your cart</h1>
+        <h1 className="mb-6 text-4xl font-bold sm:mb-8 sm:text-5xl">Your cart</h1>
         <ul className="divide-y rounded-2xl bg-card shadow-warm">
           {cart.items.map((i) => (
-            <li key={i.key} className="flex gap-4 p-4">
-              <img src={img(i.imageKey)} alt="" className="h-24 w-24 shrink-0 rounded-xl object-cover" />
-              <div className="flex flex-1 flex-col gap-1">
+            <li key={i.key} className="flex gap-3 p-3 sm:gap-4 sm:p-4">
+              <img src={img(i.imageKey)} alt="" className="h-16 w-16 shrink-0 sm:h-24 sm:w-24 rounded-xl object-cover" />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex justify-between gap-2">
                   <div>
                     <p className="text-xs font-semibold uppercase text-leaf">{i.section === "kitchen" ? "Our Kitchen" : i.section === "butchery" ? "Butchery" : "Shop"}</p>
-                    <p className="font-semibold">{i.name}</p>
+                    <p className="truncate font-semibold">{i.name}</p>
                   </div>
-                  <p className="font-bold">{formatKES(lineTotal(i.unitPrice, i.qty))}</p>
+                  <p className="shrink-0 font-bold">{formatKES(lineTotal(i.unitPrice, i.qty))}</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {formatKES(i.unitPrice)} / {i.unit}{i.prep ? ` · ${i.prep}` : ""}{i.addons.length ? ` · ${i.addons.join(", ")}` : ""}
@@ -76,7 +76,7 @@ function Cart() {
                     <span className="min-w-16 text-center text-sm font-semibold">{formatQty(i.qty, i.unit)}</span>
                     <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Increase" onClick={() => cart.setQty(i.key, i.qty + i.step)}><Plus className="h-3 w-3" /></Button>
                   </div>
-                  <button onClick={() => cart.remove(i.key)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /> Remove</button>
+                  <button onClick={() => cart.remove(i.key)} className="flex items-center gap-1 p-1 text-sm text-muted-foreground hover:text-destructive" aria-label="Remove"><Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Remove</span></button>
                 </div>
               </div>
             </li>

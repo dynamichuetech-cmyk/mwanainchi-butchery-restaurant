@@ -14,6 +14,7 @@ import { CartProvider } from "@/lib/cart";
 import { catalogQuery } from "@/lib/catalog";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { MobileCartBar } from "@/components/site/MobileCartBar";
 import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
@@ -99,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" },
@@ -158,6 +159,7 @@ function Shell({ children }: { children: ReactNode }) {
       <Header announcement={announcement || undefined} />
       <main className="flex-1">{children}</main>
       <Footer />
+      <MobileCartBar />
     </div>
   );
 }

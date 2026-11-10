@@ -5,6 +5,7 @@
 - [x] Live order status tracking
 - [ ] Live M-Pesa STK Push — blocked: needs Safaricom Daraja credentials
 - [ ] Live card payments — blocked: choose provider (e.g. Flutterwave/IntaSend) and credentials
-- [ ] Admin dashboard (products, orders, inventory, zones, hours, finance, staff)
+- [x] Basic admin: orders (status, cash received, cancel) + products (price, offer, stock, availability)
+- [ ] Full admin: inventory history, zones, hours, finance reports, staff
 - [ ] Rider portal + live map tracking
 - [ ] Real contact details (phone, address, hours) from the business

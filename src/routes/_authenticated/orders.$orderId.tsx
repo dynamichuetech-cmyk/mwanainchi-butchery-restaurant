@@ -46,12 +46,12 @@ function OrderPage() {
   const at = (s: string) => data!.events.find((e) => e.status === s)?.created_at;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-14">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-14">
       <Link to="/account" className="text-sm text-primary">← My orders</Link>
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-widest text-leaf">Order {o.order_number}</p>
-          <h1 className="text-5xl font-bold">{STATUS_LABEL[o.status]}</h1>
+          <h1 className="text-4xl font-bold sm:text-5xl">{STATUS_LABEL[o.status]}</h1>
           <p className="mt-2 text-muted-foreground">
             {o.fulfilment === "delivery" ? `Delivery to ${(o as { delivery_zones?: { name: string; eta: string } }).delivery_zones?.name ?? ""} · est. ${(o as { delivery_zones?: { eta: string } }).delivery_zones?.eta ?? ""}` : "Collection from our shop"}
             {o.scheduled_for ? ` · scheduled ${new Date(o.scheduled_for).toLocaleString("en-KE")}` : ""}
@@ -61,7 +61,7 @@ function OrderPage() {
       </div>
 
       {!cancelled && (
-        <ol className="mt-10 grid gap-4 sm:grid-cols-6">
+        <ol className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-6 sm:gap-4">
           {steps.map((s, i) => (
             <li key={s} className="flex items-center gap-3 sm:flex-col sm:text-center">
               <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2",

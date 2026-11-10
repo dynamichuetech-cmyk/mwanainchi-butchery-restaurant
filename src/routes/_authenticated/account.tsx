@@ -12,6 +12,7 @@ import { catalogQuery, useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
 import { PAYMENT_LABEL, STATUS_LABEL } from "@/lib/orders";
+import { useIsAdmin } from "@/lib/useIsAdmin";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({ meta: [{ title: "My Account | Mwanainchi" }, { name: "robots", content: "noindex" }] }),
@@ -22,19 +23,20 @@ export const Route = createFileRoute("/_authenticated/account")({
 function Account() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
+  const { data: isAdmin } = useIsAdmin(user.id);
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
   return (
-    <div className="mx-auto max-w-5xl px-4 py-14">
-      <div className="flex items-end justify-between gap-4">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-14">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-widest text-leaf">My Account</p>
-          <h1 className="text-5xl font-bold">Karibu tena.</h1>
+          <h1 className="text-4xl font-bold sm:text-5xl">Karibu tena.</h1>
           <p className="text-muted-foreground">{user.email}</p>
         </div>
-        <Button variant="outline" className="rounded-full" onClick={signOut}><LogOut className="mr-2 h-4 w-4" /> Sign out</Button>
+        <div className="flex gap-2">{isAdmin && <Button asChild className="rounded-full"><Link to="/admin">Admin dashboard</Link></Button>}<Button variant="outline" className="rounded-full" onClick={signOut}><LogOut className="mr-2 h-4 w-4" /> Sign out</Button></div>
       </div>
       <Tabs defaultValue="orders" className="mt-10">
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="addresses">Addresses</TabsTrigger>

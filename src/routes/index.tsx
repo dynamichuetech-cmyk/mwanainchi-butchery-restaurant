@@ -45,23 +45,23 @@ function Home() {
       <section className="relative isolate overflow-hidden bg-charcoal text-charcoal-foreground">
         <img src={hero} alt="Charcoal-grilled steaks and fresh cuts" width={1920} height={1088} className="absolute inset-0 -z-10 h-full w-full object-cover opacity-60" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-charcoal via-charcoal/70 to-transparent" />
-        <div className="mx-auto max-w-7xl px-4 py-28 md:py-40">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:py-28 md:py-40">
           <p className="animate-rise mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-primary">Freshness You Can Taste</p>
-          <h1 className="animate-rise max-w-3xl text-5xl font-bold leading-[1.02] md:text-7xl">Fresh Cuts. Bold Flavours. Delivered.</h1>
-          <p className="animate-rise mt-6 max-w-xl text-lg text-charcoal-foreground/80">Discover fresh cuts, quality ingredients and delicious meals, all in one place.</p>
-          <div className="animate-rise mt-10 flex flex-wrap gap-4">
+          <h1 className="animate-rise max-w-3xl text-4xl font-bold leading-[1.05] sm:text-5xl md:text-7xl">Fresh Cuts. Bold Flavours. Delivered.</h1>
+          <p className="animate-rise mt-4 max-w-xl text-base sm:mt-6 sm:text-lg text-charcoal-foreground/80">Discover fresh cuts, quality ingredients and delicious meals, all in one place.</p>
+          <div className="animate-rise mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:gap-4">
             <Button asChild size="lg" className="rounded-full px-8 text-base font-bold"><Link to="/butchery" search={{ category: undefined }}>Shop Fresh Meat <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             <Button asChild size="lg" variant="outline" className="rounded-full border-charcoal-foreground/40 bg-transparent px-8 text-base text-charcoal-foreground hover:bg-charcoal-foreground/10 hover:text-charcoal-foreground"><Link to="/kitchen" search={{ category: undefined }}>Explore Our Kitchen</Link></Button>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:py-20">
         <SectionHead eyebrow="Browse" title="Shop by category" />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-4 sm:px-0 lg:grid-cols-7">
           {CATS.map((c) => (
             <Link key={c.label} to={c.to} search={{ category: c.cat, ...(c.to === "/shop" ? { q: undefined } : {}) } as never}
-              className="group relative aspect-[3/4] overflow-hidden rounded-2xl">
+              className="group relative aspect-[3/4] w-32 shrink-0 overflow-hidden rounded-2xl sm:w-auto">
               <img src={img(c.key)} alt={c.label} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 to-transparent" />
               <span className="absolute bottom-3 left-3 right-3 font-display text-lg font-semibold text-charcoal-foreground">{c.label}</span>
@@ -70,24 +70,24 @@ function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-20">
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:pb-20">
         <SectionHead eyebrow="Customer favourites" title="Bestsellers" link={{ to: "/butchery", label: "Visit the butchery" }} />
         <ProductGrid products={best} />
       </section>
 
-      <section className="bg-primary/10 py-20">
+      <section className="bg-primary/10 py-12 sm:py-20">
         <div className="mx-auto max-w-7xl px-4">
           <SectionHead eyebrow="This week" title="Special offers" link={{ to: "/shop", label: "See all products" }} />
           <ProductGrid products={offers} />
         </div>
       </section>
 
-      <section className="bg-charcoal py-20 text-charcoal-foreground">
+      <section className="bg-charcoal py-12 sm:py-20 text-charcoal-foreground">
         <div className="mx-auto max-w-7xl px-4">
           <div className="mb-10 grid items-end gap-6 md:grid-cols-2">
             <div>
               <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-primary">Our Kitchen</p>
-              <h2 className="text-4xl font-bold md:text-5xl">Off the grill, onto your table.</h2>
+              <h2 className="text-3xl font-bold sm:text-4xl md:text-5xl">Off the grill, onto your table.</h2>
             </div>
             <p className="text-charcoal-foreground/70">Nyama choma, grilled kienyeji chicken, burgers and family platters — cooked to order for delivery, collection or a time that suits you.</p>
           </div>
@@ -96,31 +96,31 @@ function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:py-20">
         <SectionHead eyebrow="The Mwanainchi promise" title="Why choose Mwanainchi?" />
-        <div className="grid gap-6 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-4">
           {[
             { i: Beef, t: "Cut fresh daily", d: "Every order is cut and weighed by our butchers on the day." },
             { i: Leaf, t: "Locally sourced", d: "Grass-fed beef, local goat and true kienyeji chicken." },
             { i: Truck, t: "Our own riders", d: "Delivered by the Mwanainchi team, tracked live." },
             { i: ShieldCheck, t: "Pay your way", d: "M-Pesa, card or cash on delivery." },
           ].map(({ i: I, t, d }) => (
-            <div key={t} className="rounded-2xl border bg-card p-6">
+            <div key={t} className="rounded-2xl border bg-card p-4 sm:p-6">
               <I className="mb-4 h-8 w-8 text-leaf" />
-              <h3 className="mb-2 text-xl font-semibold">{t}</h3>
+              <h3 className="mb-1 text-base font-semibold sm:mb-2 sm:text-xl">{t}</h3>
               <p className="text-sm text-muted-foreground">{d}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="bg-leaf py-20 text-leaf-foreground">
+      <section className="bg-leaf py-12 sm:py-20 text-leaf-foreground">
         <div className="mx-auto max-w-7xl px-4">
-          <h2 className="mb-12 text-4xl font-bold">How ordering works</h2>
-          <div className="grid gap-8 md:grid-cols-4">
+          <h2 className="mb-8 text-3xl font-bold sm:mb-12 sm:text-4xl">How ordering works</h2>
+          <div className="grid grid-cols-2 gap-6 sm:gap-8 md:grid-cols-4">
             {["Choose your cuts or meals", "Pick weight, prep & extras", "Pay with M-Pesa, card or cash", "Track your rider to your door"].map((s, i) => (
               <div key={s}>
-                <span className="font-display text-6xl font-bold opacity-40">0{i + 1}</span>
+                <span className="font-display text-4xl font-bold opacity-40 sm:text-6xl">0{i + 1}</span>
                 <p className="mt-2 text-lg font-semibold">{s}</p>
               </div>
             ))}
@@ -128,7 +128,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:py-20">
         <SectionHead eyebrow="Reviews" title="Loved across Nairobi" />
         <div className="grid gap-6 md:grid-cols-3">
           {[
@@ -152,10 +152,10 @@ function Home() {
 
 function SectionHead({ eyebrow, title, link }: { eyebrow: string; title: string; link?: { to: "/butchery" | "/shop"; label: string } }) {
   return (
-    <div className="mb-10 flex items-end justify-between gap-4">
+    <div className="mb-6 flex items-end sm:mb-10 justify-between gap-4">
       <div>
         <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-leaf">{eyebrow}</p>
-        <h2 className="text-4xl font-bold md:text-5xl">{title}</h2>
+        <h2 className="text-3xl font-bold sm:text-4xl md:text-5xl">{title}</h2>
       </div>
       {link && <Link to={link.to} search={{ category: undefined, q: undefined } as never} className="hidden items-center gap-1 font-semibold text-primary md:flex">{link.label} <ArrowRight className="h-4 w-4" /></Link>}
     </div>
@@ -176,16 +176,16 @@ function Newsletter() {
     toast.success("You're on the list! Watch out for fresh offers.");
   };
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-20">
-      <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-primary p-10 text-primary-foreground md:flex-row md:items-center md:p-14">
+    <section className="mx-auto max-w-7xl px-4 pb-12 sm:pb-20">
+      <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-primary p-6 sm:p-10 text-primary-foreground md:flex-row md:items-center md:p-14">
         <div>
           <Smartphone className="mb-3 h-8 w-8" />
           <h2 className="text-3xl font-bold md:text-4xl">Get weekly offers first</h2>
           <p className="mt-2 opacity-80">Fresh deals on cuts and meals, straight to your inbox.</p>
         </div>
-        <form onSubmit={submit} className="flex w-full max-w-md gap-2">
+        <form onSubmit={submit} className="flex w-full max-w-md flex-col gap-2 sm:flex-row">
           <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com"
-            className="flex-1 rounded-full bg-card px-5 py-3 text-card-foreground outline-none" />
+            className="min-w-0 flex-1 rounded-full bg-card px-5 py-3 text-card-foreground outline-none" />
           <Button disabled={busy} className="rounded-full bg-charcoal px-6 text-charcoal-foreground hover:bg-charcoal/90">Subscribe</Button>
         </form>
       </div>
