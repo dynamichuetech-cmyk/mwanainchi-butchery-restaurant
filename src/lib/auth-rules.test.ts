@@ -1,0 +1,20 @@
+import { describe, expect, it } from 'vitest';
+import { adminRole, authError, loginDestination, resolveRole, safeDestination, validateRegistration } from './auth-rules';
+describe('Authentication rules', () => {
+  it('gives admin precedence over customer', () => expect(resolveRole(['customer','admin'])).toBe('admin'));
+  it('does not assume a missing role is customer', () => expect(resolveRole([])).toBeNull());
+  it('does not give riders administrator access', () => expect(adminRole(resolveRole(['rider']))).toBe(false));
+  it('recognises super administrators', () => expect(adminRole('super_admin')).toBe(true));
+  it('returns a customer to checkout', () => expect(loginDestination('customer','/checkout')).toBe('/checkout'));
+  it('sends administrators to their dashboard', () => expect(loginDestination('admin','/account')).toBe('/admin'));
+  it('blocks customer admin destinations', () => expect(loginDestination('customer','/admin')).toBe('/account'));
+  it.each(['https://evil.test','//evil.test','/\\evil.test','/auth','/reset-password'])('rejects unsafe or looping destination %s', (path) => expect(safeDestination(path)).toBeUndefined());
+  const valid = {name:'Customer',email:'customer@example.test',phone:'0712345678',password:'password123',confirmation:'password123'};
+  it('accepts required registration fields', () => expect(validateRegistration(valid)).toBeNull());
+  it('requires password confirmation', () => expect(validateRegistration({...valid,confirmation:'different'})).toBe('Passwords do not match.'));
+  it('requires eight password characters', () => expect(validateRegistration({...valid,password:'1234567'})).toBe('Use a password with at least 8 characters.'));
+  it('requires a name', () => expect(validateRegistration({...valid,name:''})).toBe('Enter your full name.'));
+  it('requires valid email', () => expect(validateRegistration({...valid,email:'invalid'})).toBe('Enter a valid email address.'));
+  it('requires valid phone', () => expect(validateRegistration({...valid,phone:''})).toBe('Enter a valid Kenyan phone number.'));
+  it('explains verification', () => expect(authError(new Error('Email not confirmed'))).toBe('Verify your email before signing in.'));
+});

@@ -4,6 +4,8 @@ import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import logo from "@/assets/mwanainchi-logo.png.asset.json";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -27,6 +29,9 @@ export function Logo({ light, size = "md" }: { light?: boolean; size?: "md" | "l
 
 export function Header({ announcement }: { announcement?: string | undefined }) {
   const { count } = useCart();
+  const auth = useAuth();
+  const accountTo = auth.isAdmin ? "/admin" : auth.isAuthenticated ? "/account" : "/auth";
+  const accountLabel = auth.isLoading ? "Checking account…" : auth.isAdmin ? "Admin dashboard" : auth.isAuthenticated ? "My Account" : "Sign in";
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -50,7 +55,7 @@ export function Header({ announcement }: { announcement?: string | undefined }) 
           </nav>
           <div className="flex items-center gap-1">
             <button aria-label="Search" onClick={() => setSearchOpen((s) => !s)} className="rounded-full p-2 hover:bg-muted"><Search className="h-5 w-5" /></button>
-            <Link to="/account" aria-label="My Account" className="hidden rounded-full p-2 hover:bg-muted sm:block"><User className="h-5 w-5" /></Link>
+            <Button asChild variant="ghost" size="sm" disabled={auth.isLoading}><Link to={accountTo} aria-label={accountLabel}><User className="h-5 w-5" /><span className="hidden sm:inline">{accountLabel}</span></Link></Button>
             <Link to="/cart" aria-label="Shopping cart" className="relative rounded-full bg-charcoal p-2 text-charcoal-foreground">
               <ShoppingBag className="h-5 w-5" />
               {count > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">{count}</span>}
@@ -62,7 +67,8 @@ export function Header({ announcement }: { announcement?: string | undefined }) 
                 <Logo size="lg" />
                 <div className="mt-6 flex flex-col gap-1">
                   {NAV.map((n) => <Link key={n.to} to={n.to} onClick={() => setMenu(false)} className="rounded-lg px-3 py-3 font-display text-xl hover:bg-muted">{n.label}</Link>)}
-                  <Link to="/account" onClick={() => setMenu(false)} className="rounded-lg px-3 py-3 font-display text-xl hover:bg-muted">My Account</Link>
+                  <Link to={accountTo} onClick={() => setMenu(false)} className="rounded-lg px-3 py-3 font-display text-xl hover:bg-muted">{accountLabel}</Link>
+                  {auth.isAuthenticated && <Button variant="ghost" className="justify-start" onClick={() => { setMenu(false); void auth.logout(); }}>Sign out</Button>}
                   <Link to="/cart" onClick={() => setMenu(false)} className="rounded-lg px-3 py-3 font-display text-xl hover:bg-muted">Shopping Cart ({count})</Link>
                 </div>
               </SheetContent>

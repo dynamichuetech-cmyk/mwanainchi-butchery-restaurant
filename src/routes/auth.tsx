@@ -1,15 +1,16 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { toast } from "sonner";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { safeDestination, loginDestination, adminRole, authError, validateRegistration, type Role } from "@/lib/auth-rules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 
-const safe = (r?: string) => (r && r.startsWith("/") && !r.startsWith("//") ? r : "/account");
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>): { redirect?: string | undefined } => ({ redirect: typeof s["redirect"] === "string" ? (s["redirect"] as string) : undefined }),
+  validateSearch: (s: Record<string, unknown>): { redirect?: string | undefined; admin?: boolean | undefined } => ({ redirect: typeof s["redirect"] === "string" ? safeDestination(s["redirect"]) : undefined, admin: s["admin"] === true || s["admin"] === "true" ? true : undefined }),
   head: () => ({
     meta: [
       { title: "Sign in | Mwanainchi" },
@@ -24,71 +25,81 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { redirect } = Route.useSearch();
+  const search = Route.useSearch();
   const navigate = useNavigate();
+  const auth = useAuth();
   const [mode, setMode] = useState<"in" | "up" | "forgot">("in");
-  const [f, setF] = useState({ name: "", email: "", password: "" });
+  const [f, setF] = useState({ name: "", email: "", phone: "", password: "", confirmation: "" });
   const [busy, setBusy] = useState(false);
-  const target = safe(redirect);
-
+  const [visible, setVisible] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [failed, setFailed] = useState(false);
+  const [savedTarget, setSavedTarget] = useState<string | undefined>();
+  useEffect(() => { setSavedTarget(safeDestination(sessionStorage.getItem("mw-after-auth") ?? undefined)); }, []);
+  const admin = search.admin === true || search.redirect?.startsWith("/admin");
+  const intended = safeDestination(search.redirect) ?? savedTarget;
+  const finish = async (role: Role | null) => {
+    if (admin && !adminRole(role)) { setFailed(true); setFeedback("This account is not authorised for administration. Your customer session remains signed in."); return; }
+    sessionStorage.removeItem("mw-after-auth");
+    await navigate({ to: loginDestination(role, intended), replace: true });
+  };
+  useEffect(() => {
+    if (auth.isAuthenticated && !busy && !feedback) void finish(auth.role);
+  }, [auth.isAuthenticated, auth.role, savedTarget, search.admin, search.redirect]);
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); setFeedback(""); setFailed(false);
+    if (mode === "up") {
+      const invalid = validateRegistration(f);
+      if (invalid) { setFailed(true); setFeedback(invalid); return; }
+    }
     setBusy(true);
     try {
       if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(f.email, { redirectTo: `${window.location.origin}/reset-password` });
+        const { error } = await supabase.auth.resetPasswordForEmail(f.email.trim(), { redirectTo: `${window.location.origin}/reset-password` });
         if (error) throw error;
-        toast.success("Check your email for a reset link.");
-        setMode("in");
+        setFeedback("Check your email for a password reset link.");
       } else if (mode === "up") {
-        const { data, error } = await supabase.auth.signUp({
-          email: f.email, password: f.password,
-          options: { emailRedirectTo: `${window.location.origin}${target}`, data: { full_name: f.name } },
-        });
-        if (error) throw error;
-        if (data.session) navigate({ to: target });
-        else toast.success("Almost there! Check your email to confirm your account.");
+        sessionStorage.setItem("mw-after-auth", intended ?? "/account");
+        const result = await auth.register(f);
+        if (result.pendingVerification) setFeedback("Account created. Check your email and confirm your address before signing in.");
+        else if (result.identity) await finish(result.identity.role);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: f.email, password: f.password });
-        if (error) throw error;
-        navigate({ to: target });
+        const identity = await auth.login(f.email, f.password);
+        await finish(identity.role);
       }
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
+    } catch (error) { setFailed(true); setFeedback(authError(error)); }
+    finally { setBusy(false); }
   };
-
   const google = async () => {
-    sessionStorage.setItem("mw-after-auth", target);
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth?redirect=" + encodeURIComponent(target) });
-    if (r.error) { toast.error("Google sign-in failed"); return; }
-    if (r.redirected) return;
-    navigate({ to: target });
+    setBusy(true); setFeedback("");
+    try {
+      sessionStorage.setItem("mw-after-auth", intended ?? (admin ? "/admin" : "/account"));
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
+      if (result.error) throw result.error;
+      if (!result.redirected) { const identity = await auth.refreshProfile(); if (identity.user) await finish(identity.role); }
+    } catch (error) { setFailed(true); setFeedback(authError(error)); }
+    finally { setBusy(false); }
   };
-
+  const changeMode = (next: typeof mode) => { setMode(next); setFeedback(""); setFailed(false); };
   return (
-    <div className="mx-auto max-w-md px-4 py-20">
-      <h1 className="text-4xl font-bold">{mode === "up" ? "Create your account" : mode === "forgot" ? "Reset password" : "Welcome back"}</h1>
-      <p className="mt-2 text-muted-foreground">Track orders, save addresses and reorder in one tap.</p>
-      <form onSubmit={submit} className="mt-8 space-y-4 rounded-3xl bg-card p-8 shadow-warm">
-        {mode === "up" && <Input required placeholder="Full name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />}
-        <Input required type="email" placeholder="Email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-        {mode !== "forgot" && <Input required type="password" minLength={6} placeholder="Password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} />}
-        <Button disabled={busy} className="w-full rounded-full font-bold">{mode === "up" ? "Create account" : mode === "forgot" ? "Send reset link" : "Sign in"}</Button>
-        {mode !== "forgot" && (
-          <button type="button" onClick={google}
-            className="flex w-full items-center justify-center gap-[10px] rounded-full border border-[#747775] bg-[#FFFFFF] px-3 py-2.5 text-sm font-medium text-[#1F1F1F]">
-            <svg aria-hidden="true" width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.560-5.17 3.56-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.070 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.090z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>
-            Continue with Google
-          </button>
-        )}
-        <div className="flex justify-between text-sm">
-          <button type="button" className="text-primary" onClick={() => setMode(mode === "up" ? "in" : "up")}>{mode === "up" ? "I have an account" : "Create an account"}</button>
-          {mode === "in" && <button type="button" className="text-muted-foreground" onClick={() => setMode("forgot")}>Forgot password?</button>}
-          {mode === "forgot" && <button type="button" className="text-muted-foreground" onClick={() => setMode("in")}>Back to sign in</button>}
+    <div className="mx-auto max-w-md px-4 py-12 sm:py-20">
+      <h1 className="text-4xl font-bold">{admin ? "Administrator sign in" : mode === "up" ? "Create your account" : mode === "forgot" ? "Reset password" : "Welcome back"}</h1>
+      {auth.isLoading && <p role="status" className="mt-3 text-muted-foreground">Checking your account…</p>}
+      <form onSubmit={submit} className="mt-8 space-y-4 rounded-3xl bg-card p-5 shadow-warm sm:p-8">
+        {mode === "up" && <><label className="block text-sm">Full name<Input required autoComplete="name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label><label className="block text-sm">Phone number<Input required type="tel" autoComplete="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></label></>}
+        <label className="block text-sm">Email<Input required type="email" autoComplete="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
+        {mode !== "forgot" && <><label className="block text-sm">Password<div className="relative"><Input required type={visible ? "text" : "password"} minLength={mode === "up" ? 8 : undefined} autoComplete={mode === "up" ? "new-password" : "current-password"} className="pr-12" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /><Button type="button" variant="ghost" size="icon" aria-label={visible ? "Hide password" : "Show password"} title={visible ? "Hide password" : "Show password"} className="absolute right-0 top-0" onClick={() => setVisible(!visible)}>{visible ? <EyeOff /> : <Eye />}</Button></div></label>{mode === "up" && <label className="block text-sm">Confirm password<Input required type={visible ? "text" : "password"} autoComplete="new-password" value={f.confirmation} onChange={(e) => setF({ ...f, confirmation: e.target.value })} /></label>}</>}
+        {feedback && <p role={failed ? "alert" : "status"} className={failed ? "text-sm text-destructive" : "text-sm text-leaf"}>{feedback}</p>}
+        {auth.error && <p role="alert" className="text-sm text-destructive">{auth.error}</p>}
+        <Button disabled={busy || auth.isLoading} className="w-full rounded-full font-bold">{busy ? "Please wait…" : mode === "up" ? "Create account" : mode === "forgot" ? "Send reset link" : "Sign in"}</Button>
+        {mode !== "forgot" && <Button type="button" variant="outline" disabled={busy || auth.isLoading} onClick={google} className="w-full rounded-full">Continue with Google</Button>}
+        <div className="flex flex-wrap justify-between gap-2 text-sm">
+          {!admin && <Button type="button" variant="link" className="px-0" onClick={() => changeMode(mode === "up" ? "in" : "up")}>{mode === "up" ? "I have an account" : "Create an account"}</Button>}
+          {mode === "in" && <Button type="button" variant="link" className="px-0" onClick={() => changeMode("forgot")}>Forgot password?</Button>}
+          {mode === "forgot" && <Button type="button" variant="link" className="px-0" onClick={() => changeMode("in")}>Back to sign in</Button>}
         </div>
+        {admin && <Button asChild variant="link" className="px-0"><Link to={auth.isAuthenticated ? "/account" : "/auth"} search={{ admin: undefined, redirect: undefined }}>Customer account</Link></Button>}
+        {!admin && <Button asChild variant="link" className="px-0"><Link to="/auth" search={{ admin: true, redirect: "/admin" }}>Administrator sign in</Link></Button>}
       </form>
     </div>
   );

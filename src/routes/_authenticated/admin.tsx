@@ -8,29 +8,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { formatKES, formatQty } from "@/lib/pricing";
-import { useIsAdmin } from "@/lib/useIsAdmin";
+import { useAuth } from "@/lib/auth";
+import { requireAdminAccess } from "@/lib/auth.functions";
 import { PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/orders";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin | Mwanainchi" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin | Mwanainchi" }, { name: "description", content: "Mwanainchi authorised business dashboard." }, { property: "og:title", content: "Admin | Mwanainchi" }, { property: "og:description", content: "Mwanainchi business administration." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   // UI gate only; the database policies are what actually block non-admins.
-  beforeLoad: async ({ context }) => {
-    const { data, error } = await supabase.rpc("has_role", { _user_id: context.user.id, _role: "admin" });
-    if (error || data !== true) throw redirect({ to: "/account" });
+  beforeLoad: async () => {
+    try { await requireAdminAccess(); }
+    catch { throw redirect({ to: "/auth", search: { admin: true, redirect: "/admin" } }); }
   },
+  pendingComponent: () => <p role="status" className="py-32 text-center text-muted-foreground">Checking administrator access…</p>,
   component: Admin,
 });
 
 function Admin() {
-  const { user } = Route.useRouteContext();
-  const { data: isAdmin, isLoading } = useIsAdmin(user.id);
-  if (isLoading) return <p className="py-32 text-center text-muted-foreground">Checking access…</p>;
+  const { isAdmin, isLoading, logout } = useAuth();
+  if (isLoading) return <p role="status" className="py-32 text-center text-muted-foreground">Checking access…</p>;
   if (!isAdmin)
     return <div className="py-32 text-center"><h1 className="text-3xl font-bold">Admins only</h1><Link to="/account" className="text-primary">Back to my account</Link></div>;
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-14">
       <p className="text-sm font-semibold uppercase tracking-widest text-leaf">Admin</p>
       <h1 className="text-4xl font-bold sm:text-5xl">Business dashboard</h1>
+      <Button variant="outline" className="mt-4 rounded-full" onClick={() => void logout()}>Sign out</Button>
       <Tabs defaultValue="orders" className="mt-8">
         <TabsList><TabsTrigger value="orders">Orders</TabsTrigger><TabsTrigger value="products">Products</TabsTrigger></TabsList>
         <TabsContent value="orders"><Orders /></TabsContent>

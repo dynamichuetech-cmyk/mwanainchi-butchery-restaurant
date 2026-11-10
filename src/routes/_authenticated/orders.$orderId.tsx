@@ -8,7 +8,7 @@ import { PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/orders";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/orders/$orderId")({
-  head: () => ({ meta: [{ title: "Track your order | Mwanainchi" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Track your order | Mwanainchi" }, { name: "description", content: "View your Mwanainchi order status and receipt." }, { property: "og:title", content: "Track your order | Mwanainchi" }, { property: "og:description", content: "Your Mwanainchi delivery or collection progress." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: OrderPage,
 });
 
@@ -43,7 +43,7 @@ function OrderPage() {
   const steps = timeline(o.fulfilment);
   const cancelled = o.status === "cancelled";
   const current = steps.indexOf(o.status);
-  const at = (s: string) => data!.events.find((e) => e.status === s)?.created_at;
+  const at = (s: string) => data?.events.find((e) => e.status === s)?.created_at;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-14">
@@ -70,7 +70,7 @@ function OrderPage() {
               </span>
               <span>
                 <span className={cn("block text-sm font-semibold", i > current && "text-muted-foreground")}>{STATUS_LABEL[s]}</span>
-                {at(s) && <span className="text-xs text-muted-foreground">{new Date(at(s)!).toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })}</span>}
+                {at(s) && <span className="text-xs text-muted-foreground">{new Date(at(s) ?? "").toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })}</span>}
               </span>
             </li>
           ))}
@@ -86,7 +86,7 @@ function OrderPage() {
 
       <div className="mt-10 grid gap-8 md:grid-cols-[1fr_320px]">
         <ul className="divide-y rounded-2xl bg-card shadow-warm">
-          {data!.items.map((i) => {
+          {data?.items.map((i) => {
             const opt = i.options as { prep?: string; addons?: string[]; notes?: string };
             return (
               <li key={i.id} className="flex justify-between gap-4 p-4">

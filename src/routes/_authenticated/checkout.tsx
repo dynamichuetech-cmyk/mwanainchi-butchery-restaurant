@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -12,9 +12,13 @@ import { deliveryFee, formatKES, formatQty, lineTotal } from "@/lib/pricing";
 import { useDiscount } from "@/lib/useDiscount";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { getAuthIdentity, submitOrder } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
-  head: () => ({ meta: [{ title: "Checkout | Mwanainchi" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Checkout | Mwanainchi" }, { name: "description", content: "Complete your Mwanainchi food order securely." }, { property: "og:title", content: "Checkout | Mwanainchi" }, { property: "og:description", content: "Delivery and collection checkout." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
+  beforeLoad: async () => { const identity = await getAuthIdentity(); if (identity.role !== "customer") throw redirect({ to: "/account" }); },
+  pendingComponent: () => <p role="status" className="py-32 text-center">Checking your account…</p>,
   loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
   component: Checkout,
 });
@@ -26,6 +30,7 @@ function Checkout() {
   const cart = useCart();
   const { zones, settings } = useCatalog();
   const { user } = Route.useRouteContext();
+  const { profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -39,13 +44,9 @@ function Checkout() {
   const [method, setMethod] = useState<Method>("mpesa");
   const [mpesa, setMpesa] = useState("");
 
-  const { data: profile } = useQuery({
-    queryKey: ["profile", user.id],
-    queryFn: async () => (await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()).data,
-  });
   const { data: addresses = [] } = useQuery({
     queryKey: ["addresses", user.id],
-    queryFn: async () => (await supabase.from("addresses").select("*").order("created_at")).data ?? [],
+    queryFn: async () => { const r = await supabase.from("addresses").select("*").eq("user_id", user.id).order("created_at"); if (r.error) throw r.error; return r.data ?? []; },
   });
   useEffect(() => {
     if (profile) setC((x) => ({ ...x, name: x.name || profile.full_name || "", phone: x.phone || profile.phone || "" }));
@@ -88,8 +89,9 @@ function Checkout() {
 
   const place = async () => {
     setBusy(true);
-    const { data, error } = await supabase.rpc("place_order", {
-      p: {
+    try {
+    const data = await submitOrder({
+      data: {
         items: cart.items.map((i) => ({ product_id: i.productId, qty: i.qty, prep: i.prep ?? "", addons: i.addons, notes: i.notes ?? "" })),
         fulfilment: fulfil, scheduled_for: when === "later" ? new Date(sched).toISOString() : "",
         contact: { name: c.name.trim(), phone: c.phone.trim(), email: c.email.trim() },
@@ -98,12 +100,13 @@ function Checkout() {
         discount_code: cart.discountCode,
       },
     });
-    setBusy(false);
-    if (error) { toast.error(error.message); return; }
     if (profile && (!profile.phone || !profile.full_name)) await supabase.from("profiles").update({ full_name: profile.full_name || c.name, phone: profile.phone || c.phone }).eq("id", user.id);
+    await refreshProfile();
     cart.clear();
     toast.success("Order placed!");
     navigate({ to: "/orders/$orderId", params: { orderId: data as string } });
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Unable to place your order. Please try again."); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -172,7 +175,7 @@ function Checkout() {
                   </button>
                 ))}
               </div>
-              {belowMin && <p className="flex items-center gap-2 text-sm text-destructive"><AlertTriangle className="h-4 w-4" /> Add {formatKES(Number(zone!.min_order) - after)} more to deliver to {zone!.name}.</p>}
+              {belowMin && zone && <p className="flex items-center gap-2 text-sm text-destructive"><AlertTriangle className="h-4 w-4" /> Add {formatKES(Number(zone.min_order) - after)} more to deliver to {zone.name}.</p>}
               <p className="text-sm text-muted-foreground">Outside these areas? Choose collection or <Link to="/contact" className="text-primary underline">contact us</Link>.</p>
             </>
           )}

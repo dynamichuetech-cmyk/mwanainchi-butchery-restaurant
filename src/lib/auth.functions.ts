@@ -1,0 +1,44 @@
+import { createServerFn } from '@tanstack/react-start';
+import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
+import { adminRole, resolveRole } from './auth-rules';
+import { z } from 'zod';
+
+export const getAuthIdentity = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { data: verified, error: verifyError } = await context.supabase.auth.getUser();
+  if (verifyError || !verified.user || verified.user.id !== context.userId) throw new Error('Session expired');
+  const { error: repairError } = await context.supabase.rpc('ensure_my_identity');
+  if (repairError) throw new Error('Profile not found');
+  const [profile, roles] = await Promise.all([
+    context.supabase.from('profiles').select('*').eq('id', context.userId).single(),
+    context.supabase.from('user_roles').select('role').eq('user_id', context.userId),
+  ]);
+  if (profile.error || roles.error) throw new Error('Profile not found');
+  return { user: verified.user, profile: profile.data, role: resolveRole(roles.data.map((r) => r.role)) };
+});
+
+export const requireAdminAccess = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { data, error } = await context.supabase.from('user_roles').select('role').eq('user_id', context.userId);
+  if (error || !adminRole(resolveRole(data.map((r) => r.role)))) throw new Error('Account not authorised for administration');
+  return true;
+});
+
+const orderInput = z.object({
+  items: z.array(z.object({ product_id: z.string().uuid(), qty: z.number().positive(), prep: z.string(), addons: z.array(z.string()), notes: z.string() })).min(1),
+  fulfilment: z.enum(['delivery', 'collection']), scheduled_for: z.string(),
+  contact: z.object({ name: z.string().trim().min(1), phone: z.string().min(1), email: z.string() }),
+  zone_id: z.string(), address: z.string(), delivery_notes: z.string(),
+  payment_method: z.enum(['mpesa', 'card', 'cash']), mpesa_phone: z.string(), discount_code: z.string(),
+});
+export const submitOrder = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(orderInput).handler(async ({ data, context }) => {
+  const { data: user, error: authError } = await context.supabase.auth.getUser();
+  if (authError || !user.user || !user.user.email_confirmed_at) throw new Error('Session expired');
+  const { data: roles, error: roleError } = await context.supabase.from('user_roles').select('role').eq('user_id', context.userId);
+  if (roleError || resolveRole(roles.map((r) => r.role)) !== 'customer') throw new Error('Customer account required');
+  const { data: id, error } = await context.supabase.rpc('place_order', { p: data });
+  if (error) {
+    // Only return known business validation messages, never database internals.
+    const safe = /^(Only |Minimum quantity|Minimum order|Your cart|Name and phone|Our Kitchen|Scheduled time|Invalid preparation|A product|Invalid fulfilment|Invalid payment|Choose|Delivery)/.test(error.message) || / is currently unavailable/.test(error.message);
+    throw new Error(safe ? error.message : 'Unable to place your order. Check the items and delivery details.');
+  }
+  return id;
+});

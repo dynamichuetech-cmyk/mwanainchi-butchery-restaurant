@@ -12,19 +12,17 @@ import { catalogQuery, useCatalog } from "@/lib/catalog";
 import { useCart } from "@/lib/cart";
 import { formatKES } from "@/lib/pricing";
 import { PAYMENT_LABEL, STATUS_LABEL } from "@/lib/orders";
-import { useIsAdmin } from "@/lib/useIsAdmin";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/account")({
-  head: () => ({ meta: [{ title: "My Account | Mwanainchi" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "My Account | Mwanainchi" }, { name: "description", content: "Your Mwanainchi orders, addresses and profile." }, { property: "og:title", content: "My Account | Mwanainchi" }, { property: "og:description", content: "Manage your Mwanainchi account." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   loader: ({ context }) => context.queryClient.ensureQueryData(catalogQuery),
   component: Account,
 });
 
 function Account() {
   const { user } = Route.useRouteContext();
-  const navigate = useNavigate();
-  const { data: isAdmin } = useIsAdmin(user.id);
-  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
+  const { isAdmin, logout: signOut } = useAuth();
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-14">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -52,12 +50,14 @@ function Account() {
 }
 
 function Orders() {
+  const { user } = useAuth();
   const { products } = useCatalog();
   const cart = useCart();
   const navigate = useNavigate();
   const { data = [], isLoading } = useQuery({
-    queryKey: ["my-orders"],
-    queryFn: async () => (await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false })).data ?? [],
+    queryKey: ["my-orders", user?.id],
+    enabled: !!user,
+    queryFn: async () => { const r = await supabase.from("orders").select("*, order_items(*)").eq("user_id", user?.id ?? "").order("created_at", { ascending: false }); if (r.error) throw r.error; return r.data ?? []; },
   });
   const reorder = (items: { product_id: string | null; qty: number; options: unknown }[]) => {
     let added = 0;
@@ -97,9 +97,11 @@ function Orders() {
 }
 
 function Payments() {
+  const { user } = useAuth();
   const { data = [] } = useQuery({
-    queryKey: ["my-payments"],
-    queryFn: async () => (await supabase.from("payments").select("*, orders(order_number, payment_status)").order("created_at", { ascending: false })).data ?? [],
+    queryKey: ["my-payments", user?.id],
+    enabled: !!user,
+    queryFn: async () => { const r = await supabase.from("payments").select("*, orders!inner(order_number, payment_status, user_id)").eq("orders.user_id", user?.id ?? "").order("created_at", { ascending: false }); if (r.error) throw r.error; return r.data ?? []; },
   });
   if (!data.length) return <p className="py-10 text-muted-foreground">No payments yet.</p>;
   return (
@@ -156,13 +158,14 @@ function Addresses({ userId }: { userId: string }) {
 }
 
 function Profile({ userId }: { userId: string }) {
+  const { profile: data, refreshProfile } = useAuth();
   const [f, setF] = useState({ full_name: "", phone: "" });
-  const { data } = useQuery({ queryKey: ["profile", userId], queryFn: async () => (await supabase.from("profiles").select("*").eq("id", userId).maybeSingle()).data });
   useEffect(() => { if (data) setF({ full_name: data.full_name ?? "", phone: data.phone ?? "" }); }, [data]);
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     const { error } = await supabase.from("profiles").upsert({ id: userId, full_name: f.full_name.trim(), phone: f.phone.trim() });
     if (error) { toast.error(error.message); return; }
+    await refreshProfile();
     toast.success("Profile updated");
   };
   return (

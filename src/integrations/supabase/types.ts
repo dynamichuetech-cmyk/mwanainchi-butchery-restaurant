@@ -423,22 +423,31 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           phone: string | null
+          updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
+          updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -468,16 +477,22 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          assigned_at: string
+          assigned_by: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          assigned_at?: string
+          assigned_by?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -493,6 +508,7 @@ export type Database = {
         Args: { _code: string; _subtotal: number }
         Returns: number
       }
+      ensure_my_identity: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -503,7 +519,16 @@ export type Database = {
       place_order: { Args: { p: Json }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "staff" | "rider" | "customer"
+      app_role:
+        | "admin"
+        | "staff"
+        | "rider"
+        | "customer"
+        | "super_admin"
+        | "inventory_manager"
+        | "kitchen_staff"
+        | "cashier"
+        | "delivery_manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -631,7 +656,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "staff", "rider", "customer"],
+      app_role: [
+        "admin",
+        "staff",
+        "rider",
+        "customer",
+        "super_admin",
+        "inventory_manager",
+        "kitchen_staff",
+        "cashier",
+        "delivery_manager",
+      ],
     },
   },
 } as const
