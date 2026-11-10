@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { KITCHEN_CATEGORIES, catalogQuery, useCatalog } from "@/lib/catalog";
 import { CatalogPage } from "@/components/site/CatalogPage";
+import { MealAdvisor } from "@/components/site/MealAdvisor";
 
 export const Route = createFileRoute("/kitchen")({
   validateSearch: (s: Record<string, unknown>): { category?: string | undefined } => ({ category: typeof s["category"] === "string" ? (s["category"] as string) : undefined }),
@@ -34,6 +35,7 @@ function Kitchen() {
           <Clock className="h-4 w-4" /> Kitchen open daily {hours}{settings?.scheduled_enabled ? " · Scheduled orders welcome" : ""}
         </div>
       )}
+      <MealAdvisor products={products.filter((p) => p.section === "kitchen")} />
     </CatalogPage>
   );
 }
