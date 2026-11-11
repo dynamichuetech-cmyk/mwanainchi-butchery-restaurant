@@ -3,8 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 export const getCatalog = createServerFn({ method: "GET" }).handler(async () => {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  const sb = createClient<Database>(process.env["SUPABASE_URL"]!, key, {
+  // Fall back to the public VITE_* values so hosts that only set those (e.g. Vercel) still work.
+  const url = process.env["SUPABASE_URL"] || import.meta.env.VITE_SUPABASE_URL;
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) throw new Error("Catalog unavailable: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY are not set on the server.");
+  const sb = createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
     global: {
       fetch: (input, init) => {
