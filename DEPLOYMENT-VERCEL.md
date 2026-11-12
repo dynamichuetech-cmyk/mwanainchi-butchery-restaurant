@@ -2,6 +2,7 @@
 
 ## Latest check and required actions (12 Nov 2026)
 - Vercel homepage still returns HTTP 500. The supplied external backend's products lookup returns HTTP 404 / PGRST205: its shop catalogue is not available through the Data API. No database, users, orders or photos have been copied; the working Lovable connection is unchanged.
+- A destination connection was subsequently saved through the secure form and tested read-only: connection succeeds and there are no public tables. Secret rotation itself has not been verified. The Cloud export is still needed for transfer.
 - `vite.config.ts` now explicitly selects Nitro's `vercel` preset when Vercel supplies `VERCEL=1`, covering Preview and Production while preserving Lovable's managed target.
 - Replace the database password and secret API key exposed in chat before migration. Provide replacements only through a secure form; never commit them or use a `VITE_*` prefix for secrets.
 - Export the current Cloud database through Lovable **More → Database → Manage → Settings → Export data**, then provide the export for inspection. A safe restore must inspect existing destination data, preserve functions/RLS/grants/sequences, handle Auth identities and owner IDs explicitly, and transfer image files plus private bucket policies separately. Do not assume application table copies transfer passwords or sign-in accounts.

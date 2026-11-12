@@ -1,6 +1,6 @@
 # Mwanainchi 2.0 roadmap
 - [x] Select Vercel's server deployment target for Preview and Production builds
-- [ ] Copy shop to external database — blocked: replacement credentials through secure form and Cloud export required; destination catalogue missing
+- [ ] Copy shop to external database — blocked: Cloud database export required; securely saved destination connection works but public schema is empty
 - [ ] Verify Vercel Preview — blocked: redeploy with matching environment variables and provide exact Preview URL
 - [x] Unified customer/rider auth, private admin entry, rider approvals and assignment access; partial acceptance tests and report
 - [ ] Verified admin/rider approval acceptance — blocked: owner and rider email confirmation; no approved rider session or live assignment yet
