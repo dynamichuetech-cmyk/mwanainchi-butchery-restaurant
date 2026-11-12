@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Keep external data-transfer scripts outside src and require a secure destination URI plus a temporary table export. Why: migration credentials/customer records must never enter the app bundle or repository.
 - Select Nitro's Vercel preset only when VERCEL=1; retain the managed default elsewhere. Why: external Preview/Production builds need server functions without changing Lovable hosting.
 - Orders are created only through the `place_order` database function, which re-prices items, checks stock/zone/discount and deducts stock — never insert orders from the client. Why: prices and availability must be validated server-side.
 - Product images are referenced by `image_key` mapped in `src/lib/images.ts`. Why: bundled assets, no storage needed yet.
