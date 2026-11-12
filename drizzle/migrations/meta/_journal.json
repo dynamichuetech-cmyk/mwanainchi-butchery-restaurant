@@ -85,6 +85,20 @@
       "when": 1794347479820,
       "tag": "0011_product_images_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794510467863,
+      "tag": "0012_tighten_settings_and_contact_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794510480608,
+      "tag": "0013_allow_newsletter_contact_kind",
+      "breakpoints": true
     }
   ]
 }
