@@ -3,7 +3,8 @@
 - [ ] Redeploy Vercel production — blocked: no Vercel deployment connection or deploy hook available
 - [x] Select Vercel's server deployment target for Preview and Production builds
 - [x] Copy requested products, delivery areas, orders and settings; exact values, order dependencies and privacy verified
-- [ ] Migrate admin, rider and customer accounts with original IDs, password hashes, roles, approvals and profiles — blocked: requires the Lovable database export containing Auth accounts; inspect destination conflicts before importing
+- [x] Migrate 8 accounts, 9 identities, 8 profiles, 7 roles, 2 rider profiles and 1 assignment; original IDs/password records and role-based order access verified
+- [ ] Fresh password sign-in on Vercel after account migration — blocked: no user password/session for external Auth; user must test existing credentials and email/provider configuration
 - [ ] Verify Vercel Preview — blocked: redeploy with matching environment variables and provide exact Preview URL
 - [x] Unified customer/rider auth, private admin entry, rider approvals and assignment access; partial acceptance tests and report
 - [ ] Verified admin/rider approval acceptance — blocked: owner and rider email confirmation; no approved rider session or live assignment yet
