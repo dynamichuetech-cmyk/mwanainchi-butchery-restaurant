@@ -99,6 +99,13 @@
       "when": 1794510480608,
       "tag": "0013_allow_newsletter_contact_kind",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794515698412,
+      "tag": "0014_super_admin_manage_admins",
+      "breakpoints": true
     }
   ]
 }

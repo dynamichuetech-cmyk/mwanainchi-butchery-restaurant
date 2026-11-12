@@ -622,10 +622,24 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_admins: {
+        Args: never
+        Returns: {
+          assigned_at: string
+          email: string
+          full_name: string
+          role: string
+          user_id: string
+        }[]
+      }
       my_delivery_details: { Args: never; Returns: Json }
       place_order: { Args: { p: Json }; Returns: string }
       review_rider: {
         Args: { _id: string; _status: string }
+        Returns: undefined
+      }
+      set_admin_role: {
+        Args: { _email: string; _grant: boolean; _role: string }
         Returns: undefined
       }
       update_my_delivery: {

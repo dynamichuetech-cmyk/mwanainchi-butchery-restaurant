@@ -10,6 +10,7 @@ import { formatKES, formatQty } from "@/lib/pricing";
 import { useAuth } from "@/lib/auth";
 import { assignDelivery, requireAdminAccess } from "@/lib/auth.functions";
 import { RiderReview } from "@/components/admin/RiderReview";
+import { AdminAccess } from "@/components/admin/AdminAccess";
 import { DiscountsAdmin, InventoryAdmin, ProductsAdmin, SettingsAdmin, ZonesAdmin } from "@/components/admin/CatalogAdmin";
 import { PAYMENT_LABEL, STATUS_LABEL, timeline } from "@/lib/orders";
 
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/admin_/dashboard")({
 });
 
 function Admin() {
-  const { isAdmin, isLoading, logout } = useAuth();
+  const { isAdmin, isLoading, logout, role } = useAuth();
   if (isLoading) return <p role="status" className="py-32 text-center text-muted-foreground">Checking access…</p>;
   if (!isAdmin)
     return <div className="py-32 text-center"><h1 className="text-3xl font-bold">Access denied</h1></div>;
@@ -35,7 +36,7 @@ function Admin() {
       <h1 className="text-4xl font-bold sm:text-5xl">Business dashboard</h1>
       <Button variant="outline" className="mt-4 rounded-full" onClick={() => void logout()}>Sign out</Button>
       <Tabs defaultValue="orders" className="mt-8">
-        <TabsList className="h-auto w-full flex-wrap justify-start"><TabsTrigger value="orders">Orders</TabsTrigger><TabsTrigger value="products">Products</TabsTrigger><TabsTrigger value="inventory">Inventory</TabsTrigger><TabsTrigger value="zones">Delivery areas</TabsTrigger><TabsTrigger value="riders">Riders</TabsTrigger><TabsTrigger value="discounts">Discounts</TabsTrigger><TabsTrigger value="settings">Shop settings</TabsTrigger></TabsList>
+        <TabsList className="h-auto w-full flex-wrap justify-start"><TabsTrigger value="orders">Orders</TabsTrigger><TabsTrigger value="products">Products</TabsTrigger><TabsTrigger value="inventory">Inventory</TabsTrigger><TabsTrigger value="zones">Delivery areas</TabsTrigger><TabsTrigger value="riders">Riders</TabsTrigger><TabsTrigger value="discounts">Discounts</TabsTrigger><TabsTrigger value="settings">Shop settings</TabsTrigger>{role === "super_admin" && <TabsTrigger value="access">Admins</TabsTrigger>}</TabsList>
         <TabsContent value="orders"><Orders /></TabsContent>
         <TabsContent value="products"><ProductsAdmin /></TabsContent>
         <TabsContent value="inventory"><InventoryAdmin /></TabsContent>
@@ -43,6 +44,7 @@ function Admin() {
         <TabsContent value="riders"><RiderReview /></TabsContent>
         <TabsContent value="discounts"><DiscountsAdmin /></TabsContent>
         <TabsContent value="settings"><SettingsAdmin /></TabsContent>
+        {role === "super_admin" && <TabsContent value="access"><AdminAccess /></TabsContent>}
       </Tabs>
     </div>
   );
