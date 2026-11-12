@@ -79,7 +79,14 @@ function AuthPage() {
     setBusy(true); setFeedback("");
     try {
       sessionStorage.setItem("mw-after-auth", kind === "rider" ? "/rider/status" : intended ?? "/account");
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth?kind=" + kind });
+      const redirect = window.location.origin + "/auth?kind=" + kind;
+      // Lovable's sign-in relay only exists on Lovable hosting; elsewhere (e.g. Vercel) use the database's own Google provider.
+      if (!/\.lovable(project)?\.(app|com)$/.test(window.location.hostname)) {
+        const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: redirect } });
+        if (error) throw error;
+        return;
+      }
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirect });
       if (result.error) throw result.error;
       if (!result.redirected) { const identity = await auth.refreshProfile(); if (identity.user) await finish(identity.role, identity.riderStatus); }
     } catch (error) { setFailed(true); setFeedback(authError(error)); }

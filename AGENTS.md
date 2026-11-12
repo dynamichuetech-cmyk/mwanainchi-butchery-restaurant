@@ -44,3 +44,4 @@ use the editor.
 - Rider signup metadata is only an application request: the trusted signup trigger assigns a nonprivileged rider role and pending profile; approval and delivery transitions are locked database functions. Why: browser metadata cannot establish approval or privileged access.
 - Uploaded product photos live in the private `product-images` bucket; products store `upload:<path>` in image_key and getCatalog swaps it for a signed URL. Why: workspace blocks public buckets.
 - Only super_admin may grant or revoke admin/super_admin roles, via SECURITY DEFINER list_admins/set_admin_role (self-removal and removing the last super_admin are blocked); schema changes must also be applied to the external Vercel database. Why: trusted, auditable admin provisioning on both hosts.
+- Google sign-in uses the Lovable broker only on Lovable hosts; other hosts (Vercel) call the database's own Google provider. Why: the /~oauth relay 404s outside Lovable hosting.
