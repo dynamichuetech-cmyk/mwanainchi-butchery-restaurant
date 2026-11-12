@@ -1,4 +1,6 @@
 # Mwanainchi 2.0 roadmap
+- [x] Package every hosted asset during external builds; download verified and desktop/mobile logo delivery simulated successfully
+- [ ] Redeploy Vercel production — blocked: no Vercel deployment connection or deploy hook available
 - [x] Select Vercel's server deployment target for Preview and Production builds
 - [x] Copy requested products, delivery areas, orders and settings; exact values, order dependencies and privacy verified
 - [ ] External account access to copied orders/admin — blocked: Auth users were not requested/copied; trusted account provisioning and identity mapping required

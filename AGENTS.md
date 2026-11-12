@@ -32,6 +32,7 @@ use the editor.
 ## Project rules
 - Keep external data-transfer scripts outside src and require a secure destination URI plus a temporary table export. Why: migration credentials/customer records must never enter the app bundle or repository.
 - Select Nitro's Vercel preset only when VERCEL=1; retain the managed default elsewhere. Why: external Preview/Production builds need server functions without changing Lovable hosting.
+- External builds materialise all hosted asset pointers into public paths before Vite runs; fail on missing or invalid files. Why: Vercel lacks Lovable's asset proxy, while unchanged URLs preserve logos and future uploaded brand assets without committing downloads.
 - Orders are created only through the `place_order` database function, which re-prices items, checks stock/zone/discount and deducts stock — never insert orders from the client. Why: prices and availability must be validated server-side.
 - Product images are referenced by `image_key` mapped in `src/lib/images.ts`. Why: bundled assets, no storage needed yet.
 - Public catalogue (products, zones, settings) loads via the `getCatalog` server function with the publishable key. Why: SSR-safe public reads.
